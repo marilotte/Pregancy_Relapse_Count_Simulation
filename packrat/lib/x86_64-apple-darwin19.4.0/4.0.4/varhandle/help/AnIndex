@@ -1,0 +1,10 @@
+varhandle-package	varhandle-package
+check.numeric	check.numeric
+inspect.na	inspect.na
+pin.na	pin.na
+rm.all.but	rm.all.but
+save.var	save.var
+to.dummy	to.dummy
+unfactor	unfactor
+var.info	var.info
+varhandle	varhandle-package

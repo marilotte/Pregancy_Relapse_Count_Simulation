@@ -1,0 +1,155 @@
+---
+title: "Triangle Distribution Math"
+author: "Rob Carnell"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Triangle Distribution Math}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+header-includes:
+  - \usepackage{amsmath}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Triangle Notation
+
+```{r triangle_drawing, echo=FALSE, fig.width=5, fig.height=4}
+plot(c(-1,5), c(0,4), type = "n", xlab = "x", ylab = "f(x)", axes = FALSE)
+lines(c(0,1), c(0,3), col = "red")
+lines(c(1,4), c(3,0), col = "red")
+axis(2, at = c(0,3), labels = c("0","h"), las = 2)
+axis(1, at = c(0,1,4), labels = c("a", "c", "b"))
+box()
+```
+
+- $a$ = minimum
+- $b$ = maximum
+- $c$ = mode
+- $h$ = density at the mode = $\frac{2}{b-a}$
+
+## Triangle PDF
+
+$$f(x) =
+\left\{
+	\begin{array}{ll}
+		\frac{h}{c-a}(x-a)  & \mbox{if } a \leq x \leq c \\
+		\frac{h}{c-b}(x-b) & \mbox{if } c < x \leq b \\
+		0 & \mbox{otherwise}
+	\end{array}
+\right.\ \ \ \ (1)$$
+
+Integrating the pdf in equation (1) to solve for h
+
+$$\int f(x) dx = 1$$
+
+$$\frac{h}{c-a}\int_{a}^{c} (x-a) dx + \frac{h}{c-b} \int_{c}^{b} (x-b) dx = \frac{h(b-a)}{2}$$
+
+$$h=\frac{2}{b-a}\ \ \ \ (2)$$
+
+Substituting back into equation (1),
+
+$$f(x) =
+\left\{
+	\begin{array}{ll}
+		\frac{2}{(b-a)(c-a)}(x-a)  & \mbox{if } a \leq x \leq c \\
+		\frac{2}{(b-a)(c-b)}(x-b) & \mbox{if } c < x \leq b \\
+		0 & \mbox{otherwise}
+	\end{array}
+\right.\ \ \ \ (3)$$
+
+## Triangle Mean
+
+Integrating equation (3) to find $E(x)$,
+
+$$E(X)=\int xf(x)dx = \frac{h}{c-a}\int_a^c (x^2-ax) dx + 
+\frac{h}{c-b}\int_c^b (x^2-bx) dx$$
+
+$$=\frac{a+b+c}{3}\ \ \ \ (3)$$
+
+## Triangle Variance
+
+$$V(X) = E(X^2) - \big(E(X)\big)^2 = \int x^2f(x)dx- \bigg(\frac{a+b+c}{3}\bigg)^2$$
+
+$$=\frac{h}{c-a}\int_{a}^{c} x^2(x-a) dx + \frac{h}{c-b} \int_{c}^{b} x^2(x-b) dx- \bigg(\frac{a+b+c}{3}\bigg)^2$$
+
+$$=\frac{a^2+b^2+c^2-ab-ac-bc}{18}$$
+
+## Logarithmic Triangle distribution
+
+Define:
+
+$$a_l=log_{\phi}(a),\ \ b_l=log_{\phi}(b),\ \ c_l=log_{\phi}(c),\ \ h=\frac{2}{b_l-a_l}, \ \ \phi = \mbox{log base}$$
+
+$$f(z) = 
+\left\{
+  \begin{array}{ll}
+    \frac{h}{c_l - a_l}(z - a_l) & \mbox{if } a_l \leq z \leq c_l \\
+    \frac{h}{c_l - b_l}(z - b_l) & \mbox{if } c_l < z \leq b_l \\
+    0 & \mbox{otherwise}
+  \end{array}
+\right.\ \ \ \ (4)$$
+
+However,
+
+$$E({\phi}^z) \neq {\phi}^{E(z)}\ \ \ \ (5)$$
+
+Therefore, transforming...
+
+$$Y={\phi}^Z$$
+
+$$Z=log_{\phi}(Y)$$
+
+$$w(y)=log_{\phi}(y)$$
+
+$$w'(y)=\frac{dz}{dy} = \frac{1}{yln({\phi})}$$
+
+$$g(y)=f(w(y))w'(y)$$
+
+$$g(y) = 
+\left\{
+  \begin{array}{ll}
+    \frac{2}{(c_l-a_l)(b_l-a_l)ln({\phi})}\frac{log_{\phi}(y) - a_l}{y} & \mbox{if } 0 < a \leq y \leq c \\
+    \frac{2}{(c_l-b_l)(b_l-a_l)ln({\phi})}\frac{lob_{\phi}(y) - b_l}{y} & \mbox{if } c < y \leq b \\
+    0 & \mbox{otherwise}
+  \end{array}
+\right.\ \ \ \ (5)$$
+
+Define:
+
+$$\beta_1=\frac{2}{(c_l-a_l)(b_l-a_l)}$$
+
+$$\beta_2=\frac{2}{(c_l-b_l)(b_l-a_l)}$$
+
+Finding the CDF, 
+
+$$G(y)=\int_{-\infty}^y g(y)dy$$
+
+$$\mbox{for}\ a \leq y \leq c,\ \ G(y) = \frac{\beta_1}{ln({\phi})} \int_a^y \frac{ln(y)}{yln({\phi})}-\frac{a_l}{y}dy$$
+
+$$=\beta_1 \bigg[\frac{log_{\phi}^2(y)}{2} - a_llog_{\phi}(y) - \frac{a_l^2}{2} + a_l^2\bigg]$$
+
+$$\mbox{for}\ c < y \leq b,\ \ G(y) = G(c) + \frac{\beta_2}{ln({\phi})} \int_c^y \frac{ln(y)}{yln({\phi})} - \frac{b_l}{y}dy$$
+
+$$=G(c) + \beta_2 \bigg[\frac{log_{\phi}^2(y)}{2} - b_l log_{\phi}(y) - \frac{c_l^2}{2} + b_l c_l\bigg]$$
+
+Checking that the CDF is 1 at b,
+
+$$G(b) = \frac{c_l^2 - 2a_l c_l + a_l^2}{(c_l-a_l)(b_l-a_l)} + \frac{-b_l^2-c_l^2+2b_lc_l}{(c_l-b_l)(b_l-a_l)}$$
+
+$$= \frac{c_l-a_l}{b_l-a_l} + \frac{-(c_l-b_l)}{b_l-a_l} = 1$$
+
+Now calculating $E(y)$,
+
+$$E(y) = \int y\ g(y)\ dy$$
+
+$$=\frac{\beta_1}{ln({\phi})} \int_a^c \bigg[\frac{ln(y)}{ln({\phi})} - a_l\bigg]dy + 
+\frac{\beta_2}{ln({\phi})} \int_c^b \bigg[\frac{ln(y)}{ln({\phi})} - b_l\bigg]dy$$
+
+$$=\frac{c\beta_1}{ln^2({\phi})} \bigg[ln(c) - 1 - ln(a) + \frac{a}{c} \bigg] + \frac{c\beta_2}{ln^2({\phi})} \bigg[\frac{-b}{c} - ln(c) + 1 + ln(b)\bigg]$$

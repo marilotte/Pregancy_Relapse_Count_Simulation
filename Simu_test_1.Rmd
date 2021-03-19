@@ -6,25 +6,417 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+# IMPORTANT! THIS IS A PACKRAT PROJECT!!! #
+### otions
+knitr::opts_chunk$set(echo = F)
+
+### packages
+library(tidyr)
+library(dplyr)
+library(simrec)
+library(varhandle)
+
+
+
+```
+## simrec
+
+The function simrec allows simulation of recurrent event data following the multiplicative intensity model described in Andersen and Gill (Andersen and Gill 1982) with the baseline hazard being a function of the total/calendar time. To induce between-subject-heterogeneity a random effect covariate (frailty term) can be incorporated. Data for individual i are generated according to the intensity process
+Yi(t)⋅λ0(t)⋅Zi⋅exp(βtXi)
+where Xi defines the covariate vector, and β the regression coefficient vector. λ0(t) denotes the baseline hazard, being a function of the total/calendar time t, and Yi(t) the predictable process that equals one as long as individual i is under observation and at risk for experiencing events. Zi denotes the frailty variable with (Zi)i iid with E(Zi)=1 and Var(Zi)=θ. The parameter θ describes the degree of between-subject-heterogeneity. Data output is in the counting process format.
+from vingiette
+
+### Simulation of a stable ARR
+
+Here I try to simulate just a stable ARR across a observational period. This means the baseline hazard doesn't change over time and no Covariats are included.
+Simulation of just relpase data: about a risk of 0.5 per year across group, min. 30 days apart
+
+```{r}
+#### parameters
+
+### observation parameters
+
+N_goal <-  100000 #numers of subjects wanted
+N <- 100 # Number of simulated Subjects per run off the loop
+N_loops <- N_goal/N
+##
+year <-  365
+pregnancy <- 280
+years <- round((2*year + pregnancy) / year, digits = 2) # set observation time in years
+ARR <- 0.5
+
+## Between-Subject differences
+# The parameter θ describes the degree of between-subject-heterogeneity
+# a gamma distributed frailty variable with variance 0.25
+dist.z <- "gamma"
+#par.z <-  0.25 #like described above
+par.z <- 0 # turned off
+
+## baseline hazard
+## here I try to just hit a ARR of 0.5
+# 1. Weibull-shaped baseline hazard with shape parameter lambda=1
+# and scale parameter nu=2.
+#dist.rec <- "weibull"
+#par.rec <- c(0.5,2)
+
+#2. step baseline hazard
+# with lambda= a = 0.5until t1 and lambda = b = 0.5 after t1
+# t1 is set to one day, so the mean ARR *should* be 0.5
+dist.rec="step"
+a= 0.5 / year
+b= 0.5 / year
+t_1 = 1
+par.rec=c(a,b,t_1)
+
+## Follow up time
+# Subjects are to be followed for two years with 20\% of the subjects
+# being censored according to a uniformly distributed censoring time
+# within [0,2] (in years).
+
+#fu.min <- years
+#fu.max <- years
+#cens.prob <- 0.2
+
+#no censoring, follow up for 2 years plus pregnancy
+fu.min <- 2*year + pregnancy
+fu.max <- 2*year + pregnancy
+cens.prob <- 0
+
+## Risk-free period
+# After each event a subject is not at risk for experiencing further events
+## for a period of 30 days 
+
+dfree <- 30
+pfree <- 1
+
+## Covariats, set to have no influence = beta == 0
+dist.x <- "binomial"
+par.x  <- 0.5
+beta.x <-  0
 ```
 
-## R Markdown
+```{r}
+#simulation loop
+for (count_loops in 1:N_loops) {
+  if(count_loops == 1)
+  {simdata <- simrec(N, fu.min, fu.max, cens.prob, dist.x , par.x , beta.x,
+                  dist.z, par.z, dist.rec, par.rec, pfree, dfree)
+  
+  simdata$id <- simdata$id + N*count_loops
+  }
+  tmp <- simrec(N, fu.min, fu.max, cens.prob, dist.x , par.x , beta.x,
+                  dist.z, par.z, dist.rec, par.rec, pfree, dfree)
+  
+  tmp$id <- tmp$id + N*count_loops
+  
+  simdata <- rbind(simdata, tmp)
+  
+  rm(tmp)
+  
+}
+nrow(simdata %>% select(id) %>% unique()) # first check
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+#### Simulation of a single set of N Subjects
+# simdata <- simrec(N, fu.min, fu.max, cens.prob, dist.x , par.x , beta.x,
+#                   dist.z, par.z, dist.rec, par.rec, pfree, dfree)
+# 
+# print(simdata[1:10,])
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+```{r}
+# check wether the target mean ARR has been hit
+simdata1 <- simdata %>% 
+  group_by(id) %>% 
+  mutate(num_events = sum(status)) %>% # get the number of events per ID
+  ungroup() %>% 
+  mutate(sim.ARR = num_events/fu * year)
+
+tmp <- simdata1 %>% 
+  dplyr::select(id, sim.ARR) %>% 
+  unique()
+
+mean(tmp$sim.ARR)
+```
+
+```{r}
+### reformat data to the format as I find it in the KuMS data
+simdata2 <-  simdata1 %>% 
+  mutate(
+         LMP = year + 1, # set trimesters
+         DOD = LMP + pregnancy,
+         
+         end_trim1.year_prior = year/4,
+         end_trim2.year_prior = (year/4) * 2,
+         end_trim3.year_prior = (year/4) * 3,
+         
+         end_trim1.preg = LMP + 84,
+         end_trim2.preg = end_trim1.preg + 112,
+         
+         end_trim1.post_partum = DOD + year/4,
+         end_trim2.post_partum = DOD + (year/4) * 2,
+         end_trim3.post_partum = DOD + (year/4) * 3) %>% 
+         
+         mutate(timeframe = case_when(
+           
+           stop <= end_trim1.year_prior
+            ~ "trim1.yp",
+           
+           stop > end_trim1.year_prior &
+           stop <= end_trim2.year_prior 
+            ~ "trim2.yp",
+           
+           stop > end_trim2.year_prior &
+           stop <= end_trim3.year_prior 
+            ~ "trim3.yp",
+           
+           stop > end_trim3.year_prior &
+           stop <= LMP 
+            ~ "trim4.yp",
+           
+           stop > LMP &
+           stop <= end_trim1.preg 
+            ~ "trim1.preg",
+           
+           stop > end_trim1.preg &
+           stop <= end_trim2.preg 
+            ~ "trim2.preg",
+           
+           stop > end_trim2.preg &
+           stop <= DOD 
+            ~ "trim3.preg",
+           
+           stop > DOD &
+           stop <= end_trim1.post_partum 
+            ~ "trim1.pp",
+           
+           stop > end_trim1.post_partum &
+           stop <= end_trim2.post_partum 
+            ~ "trim2.pp",
+           
+           stop > end_trim2.post_partum &
+           stop <= end_trim3.post_partum 
+            ~ "trim3.pp",
+           
+           stop > end_trim3.post_partum 
+            ~ "trim4.pp"
+         ))
+         
+
+
+
+print(simdata2[1:10,])
+```
+
+```{r}
+### get the counts per timeframe
+ tmp <- simdata2 %>% 
+  filter(status == 1) %>%  #remove all times without an event
+  group_by(id) %>%
+  add_count(timeframe) %>% 
+  select(-c(start, stop, status, num_events)) %>% 
+  unique()
+
+
+```
+
+```{r}
+#get the base data for all subjects
+base <-  simdata2 %>% 
+  select(id
+         , x
+         , z
+         , sim.ARR
+         , LMP
+         , DOD
+         
+         ) %>% unique()
+```
+
+```{r}
+tmp2 <- base %>% 
+  mutate(timeframe = "trim1.yp")
+
+tmp3 <- left_join(base, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim2.yp")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim3.yp")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim4.yp")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim1.preg")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim2.preg")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim3.preg")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim1.pp")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+tmp2 <- base %>% 
+  mutate(timeframe = "trim2.pp")
+
+tmp3 <- rbind(tmp3, tmp2)
+tmp2 <- base %>% 
+  mutate(timeframe = "trim3.pp")
+
+tmp3 <- rbind(tmp3, tmp2)
+tmp2 <- base %>% 
+  mutate(timeframe = "trim4.pp")
+
+tmp3 <- rbind(tmp3, tmp2)
+
+### make time frame a factor and set the correct order
+tmp3$timeframe <- as.factor(tmp3$timeframe)
+
+tmp3$timeframe  <- factor(tmp3$timeframe 
+                ,levels = c( "trim1.yp" 
+                            ,"trim2.yp"   
+                            ,"trim3.yp" 
+                            ,"trim4.yp" 
+                            ,"trim1.preg" 
+                            ,"trim2.preg" 
+                            ,"trim3.preg"
+                           , "trim1.pp"   
+                           , "trim2.pp"   
+                            ,"trim3.pp"   
+                           , "trim4.pp" ))
+```
+
+```{r}
+### make final, full dataframe
+simpois <-  tmp3 %>% 
+  left_join(., simdata2 %>% select(-c(start, stop, status, num_events, timeframe)) %>% unique() ) %>% 
+  left_join(., tmp) %>% 
+  mutate(events_in_timeframe = ifelse(is.na(n), 0, n)
+         ) %>% 
+  mutate(days_in_timeframe = case_when(
+    timeframe == "trim1.yp"
+    ~ year/4,
+    
+    timeframe == "trim2.yp"
+    ~ year/4,
+    
+    timeframe == "trim3.yp"
+    ~ year/4,
+    
+    timeframe == "trim4.yp"
+    ~ year/4,
+    
+    timeframe == "trim1.preg"
+    ~ 84,
+    
+    timeframe == "trim2.preg"
+    ~ 112,
+    
+    timeframe == "trim3.preg"
+    ~ 84,
+    
+    timeframe == "trim1.pp"
+    ~ year/4,
+    
+    timeframe == "trim2.pp"
+    ~ year/4,
+    
+    timeframe == "trim3.pp"
+    ~ year/4,
+    
+    timeframe == "trim4.pp"
+    ~ year/4,
+  ))
+```
+
+```{r}
+### cleanup
+rm.all.but(c("simdata2", "simpois"))
+```
+# plot events per day to look for patterns
+
+```{r}
+tmp  <- simdata2   %>% 
+  filter(status == 1) %>% 
+  select(stop) %>% unique()
+
+tmp$day <- round(tmp$stop) 
+
+# 
+# tmp <- transform(tmp, freq.day = ave(seq(nrow(tmp)), day, FUN=length)) %>% 
+#   select(-c(id, stop)) %>% unique()
+```
+
+```{r}
+hist(x = tmp$day, freq = T, breaks = 11)
+```
+
+
+
+# looking at the plots like in the KuMS Project to compare
+
+might give a signularity warning, but that's just what we want - all timeframes should be the same. Thus, we also do not expect any significant  betas
+
+```{r}
+simpois$timeframe <- as.factor(simpois$timeframe)
+
+simpois$timeframe  <- factor(simpois$timeframe 
+                ,levels = c( "trim1.yp" 
+                            ,"trim2.yp"   
+                            ,"trim3.yp" 
+                            ,"trim4.yp" 
+                            ,"trim1.preg" 
+                            ,"trim2.preg" 
+                            ,"trim3.preg"
+                           , "trim1.pp"   
+                           , "trim2.pp"   
+                            ,"trim3.pp"   
+                           , "trim4.pp" ))
+
+simpois$id <- as.character(simpois$id)
+
+
+m1 <- lme4::glmer(
+  events_in_timeframe ~ timeframe  + (1|id) + offset(log(days_in_timeframe/365))
+  , data =  simpois
+  , family = poisson()
+)
+```
+
+```{r}
+summary(m1)
+```
+
+
+```{r}
+### make time frame a factor and set the correct order
+
+
+
+emmeans::emmip(m1,   ~ timeframe, type = "response", offset=0 , CIs = T, data = simpois)
+```
+
+

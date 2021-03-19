@@ -1,0 +1,10 @@
+GenOrd-package          Simulation of Discrete Random Variables with
+                        Given Correlation Matrix and Marginal
+                        Distributions
+contord                 Correlations of discretized variables
+corrcheck               Checking correlations for feasibility
+ordcont                 Computing the "intermediate" correlation matrix
+                        for the multivariate standard normal in order
+                        to achieve the "target" correlation matrix for
+                        the multivariate discrete variable
+ordsample               Drawing a sample of discrete data

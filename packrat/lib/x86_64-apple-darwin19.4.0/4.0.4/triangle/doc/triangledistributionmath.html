@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<meta name="author" content="Rob Carnell" />
+
+<meta name="date" content="2019-02-14" />
+
+<title>Triangle Distribution Math</title>
+
+
+
+
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23header%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%20code%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Triangle Distribution Math</h1>
+<h4 class="author"><em>Rob Carnell</em></h4>
+<h4 class="date"><em>2019-02-14</em></h4>
+
+
+
+<div id="triangle-notation" class="section level2">
+<h2>Triangle Notation</h2>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<ul>
+<li><span class="math inline">\(a\)</span> = minimum</li>
+<li><span class="math inline">\(b\)</span> = maximum</li>
+<li><span class="math inline">\(c\)</span> = mode</li>
+<li><span class="math inline">\(h\)</span> = density at the mode = <span class="math inline">\(\frac{2}{b-a}\)</span></li>
+</ul>
+</div>
+<div id="triangle-pdf" class="section level2">
+<h2>Triangle PDF</h2>
+<p><span class="math display">\[f(x) =
+\left\{
+    \begin{array}{ll}
+        \frac{h}{c-a}(x-a)  &amp; \mbox{if } a \leq x \leq c \\
+        \frac{h}{c-b}(x-b) &amp; \mbox{if } c &lt; x \leq b \\
+        0 &amp; \mbox{otherwise}
+    \end{array}
+\right.\ \ \ \ (1)\]</span></p>
+<p>Integrating the pdf in equation (1) to solve for h</p>
+<p><span class="math display">\[\int f(x) dx = 1\]</span></p>
+<p><span class="math display">\[\frac{h}{c-a}\int_{a}^{c} (x-a) dx + \frac{h}{c-b} \int_{c}^{b} (x-b) dx = \frac{h(b-a)}{2}\]</span></p>
+<p><span class="math display">\[h=\frac{2}{b-a}\ \ \ \ (2)\]</span></p>
+<p>Substituting back into equation (1),</p>
+<p><span class="math display">\[f(x) =
+\left\{
+    \begin{array}{ll}
+        \frac{2}{(b-a)(c-a)}(x-a)  &amp; \mbox{if } a \leq x \leq c \\
+        \frac{2}{(b-a)(c-b)}(x-b) &amp; \mbox{if } c &lt; x \leq b \\
+        0 &amp; \mbox{otherwise}
+    \end{array}
+\right.\ \ \ \ (3)\]</span></p>
+</div>
+<div id="triangle-mean" class="section level2">
+<h2>Triangle Mean</h2>
+<p>Integrating equation (3) to find <span class="math inline">\(E(x)\)</span>,</p>
+<p><span class="math display">\[E(X)=\int xf(x)dx = \frac{h}{c-a}\int_a^c (x^2-ax) dx + 
+\frac{h}{c-b}\int_c^b (x^2-bx) dx\]</span></p>
+<p><span class="math display">\[=\frac{a+b+c}{3}\ \ \ \ (3)\]</span></p>
+</div>
+<div id="triangle-variance" class="section level2">
+<h2>Triangle Variance</h2>
+<p><span class="math display">\[V(X) = E(X^2) - \big(E(X)\big)^2 = \int x^2f(x)dx- \bigg(\frac{a+b+c}{3}\bigg)^2\]</span></p>
+<p><span class="math display">\[=\frac{h}{c-a}\int_{a}^{c} x^2(x-a) dx + \frac{h}{c-b} \int_{c}^{b} x^2(x-b) dx- \bigg(\frac{a+b+c}{3}\bigg)^2\]</span></p>
+<p><span class="math display">\[=\frac{a^2+b^2+c^2-ab-ac-bc}{18}\]</span></p>
+</div>
+<div id="logarithmic-triangle-distribution" class="section level2">
+<h2>Logarithmic Triangle distribution</h2>
+<p>Define:</p>
+<p><span class="math display">\[a_l=log_{\phi}(a),\ \ b_l=log_{\phi}(b),\ \ c_l=log_{\phi}(c),\ \ h=\frac{2}{b_l-a_l}, \ \ \phi = \mbox{log base}\]</span></p>
+<p><span class="math display">\[f(z) = 
+\left\{
+  \begin{array}{ll}
+    \frac{h}{c_l - a_l}(z - a_l) &amp; \mbox{if } a_l \leq z \leq c_l \\
+    \frac{h}{c_l - b_l}(z - b_l) &amp; \mbox{if } c_l &lt; z \leq b_l \\
+    0 &amp; \mbox{otherwise}
+  \end{array}
+\right.\ \ \ \ (4)\]</span></p>
+<p>However,</p>
+<p><span class="math display">\[E({\phi}^z) \neq {\phi}^{E(z)}\ \ \ \ (5)\]</span></p>
+<p>Therefore, transforming…</p>
+<p><span class="math display">\[Y={\phi}^Z\]</span></p>
+<p><span class="math display">\[Z=log_{\phi}(Y)\]</span></p>
+<p><span class="math display">\[w(y)=log_{\phi}(y)\]</span></p>
+<p><span class="math display">\[w'(y)=\frac{dz}{dy} = \frac{1}{yln({\phi})}\]</span></p>
+<p><span class="math display">\[g(y)=f(w(y))w'(y)\]</span></p>
+<p><span class="math display">\[g(y) = 
+\left\{
+  \begin{array}{ll}
+    \frac{2}{(c_l-a_l)(b_l-a_l)ln({\phi})}\frac{log_{\phi}(y) - a_l}{y} &amp; \mbox{if } 0 &lt; a \leq y \leq c \\
+    \frac{2}{(c_l-b_l)(b_l-a_l)ln({\phi})}\frac{lob_{\phi}(y) - b_l}{y} &amp; \mbox{if } c &lt; y \leq b \\
+    0 &amp; \mbox{otherwise}
+  \end{array}
+\right.\ \ \ \ (5)\]</span></p>
+<p>Define:</p>
+<p><span class="math display">\[\beta_1=\frac{2}{(c_l-a_l)(b_l-a_l)}\]</span></p>
+<p><span class="math display">\[\beta_2=\frac{2}{(c_l-b_l)(b_l-a_l)}\]</span></p>
+<p>Finding the CDF,</p>
+<p><span class="math display">\[G(y)=\int_{-\infty}^y g(y)dy\]</span></p>
+<p><span class="math display">\[\mbox{for}\ a \leq y \leq c,\ \ G(y) = \frac{\beta_1}{ln({\phi})} \int_a^y \frac{ln(y)}{yln({\phi})}-\frac{a_l}{y}dy\]</span></p>
+<p><span class="math display">\[=\beta_1 \bigg[\frac{log_{\phi}^2(y)}{2} - a_llog_{\phi}(y) - \frac{a_l^2}{2} + a_l^2\bigg]\]</span></p>
+<p><span class="math display">\[\mbox{for}\ c &lt; y \leq b,\ \ G(y) = G(c) + \frac{\beta_2}{ln({\phi})} \int_c^y \frac{ln(y)}{yln({\phi})} - \frac{b_l}{y}dy\]</span></p>
+<p><span class="math display">\[=G(c) + \beta_2 \bigg[\frac{log_{\phi}^2(y)}{2} - b_l log_{\phi}(y) - \frac{c_l^2}{2} + b_l c_l\bigg]\]</span></p>
+<p>Checking that the CDF is 1 at b,</p>
+<p><span class="math display">\[G(b) = \frac{c_l^2 - 2a_l c_l + a_l^2}{(c_l-a_l)(b_l-a_l)} + \frac{-b_l^2-c_l^2+2b_lc_l}{(c_l-b_l)(b_l-a_l)}\]</span></p>
+<p><span class="math display">\[= \frac{c_l-a_l}{b_l-a_l} + \frac{-(c_l-b_l)}{b_l-a_l} = 1\]</span></p>
+<p>Now calculating <span class="math inline">\(E(y)\)</span>,</p>
+<p><span class="math display">\[E(y) = \int y\ g(y)\ dy\]</span></p>
+<p><span class="math display">\[=\frac{\beta_1}{ln({\phi})} \int_a^c \bigg[\frac{ln(y)}{ln({\phi})} - a_l\bigg]dy + 
+\frac{\beta_2}{ln({\phi})} \int_c^b \bigg[\frac{ln(y)}{ln({\phi})} - b_l\bigg]dy\]</span></p>
+<p><span class="math display">\[=\frac{c\beta_1}{ln^2({\phi})} \bigg[ln(c) - 1 - ln(a) + \frac{a}{c} \bigg] + \frac{c\beta_2}{ln^2({\phi})} \bigg[\frac{-b}{c} - ln(c) + 1 + ln(b)\bigg]\]</span></p>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

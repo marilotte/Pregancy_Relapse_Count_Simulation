@@ -1,0 +1,13 @@
+check.numeric           Check the vector's possiblity to convert to
+                        numeric
+inspect.na              inspect matrix or data.frame regarding NAs
+pin.na                  Pinpoint NAs in a vector, matrix or data.frame
+rm.all.but              Remove all variables except those that you
+                        mention
+save.var                Save variables separate files
+to.dummy                Convert categorical vector into dummy binary
+                        dataframe
+unfactor                Convert factor into appropriate class
+var.info                Get a detailed list of variables
+varhandle-package       A Package to Work and Handl Variables Easier,
+                        Convenient and Flawless
