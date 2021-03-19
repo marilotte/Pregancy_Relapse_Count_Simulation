@@ -419,4 +419,3 @@ summary(m1)
 emmeans::emmip(m1,   ~ timeframe, type = "response", offset=0 , CIs = T, data = simpois)
 ```
 
-
