@@ -1,0 +1,453 @@
+---
+title: "Simulation of pregnancy relapse rates"
+author: "Marianne Tokic"
+date: "3/20/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# IMPORTANT! THIS IS A PACKRAT PROJECT!!! #
+### options
+knitr::opts_chunk$set(echo = F)
+
+### packages
+library(tidyr)
+library(dplyr)
+library(simrec)
+library(varhandle)
+library(ggplot2)
+library(Runuran)
+
+```
+## Overview of this skript
+In this script I simply try to simulate the natural course of the disease through pregnancy as per the PRIMS data.
+In the first step, I generate a big data set of mean ARRs in the range of the values found in the PRIMS study.
+Then,  I try to get a good description of the course in the PRIMS data by:
+- cubic linear regression
+- natuarl splines
+- b-splines
+- ...?
+
+In the last step, I try to integrate the description of the disease course into either simrec or simEvent
+
+## Natural course of the disease as per PRIMS:
+getting a bigger sample of ARRs like in the PRIMS data
+
+```{r}
+### Data from the original PRIMS Paper
+dat.PRIMS <- data.frame(
+  timeframe = c(             "trim1.yp" 
+                            ,"trim2.yp"   
+                            ,"trim3.yp" 
+                            ,"trim4.yp" 
+                            ,"trim1.preg" 
+                            ,"trim2.preg" 
+                            ,"trim3.preg"
+                           , "trim1.pp"   
+                           , "trim2.pp"   
+                            ,"trim3.pp"   
+                           , "trim4.pp")
+  
+  ,tf = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+  , ARR = c(
+    0.6
+    ,0.7
+    ,0.7
+    ,0.8
+    
+    ,0.5
+    ,0.6
+    ,0.2
+    
+    ,1.2
+    ,0.9
+    ,0.9
+    ,0.6
+  )
+  , lower.CI = c(
+    0.5
+    ,0.6
+    ,0.6
+    ,0.7
+    
+    ,0.4
+    ,0.5
+    ,0.2
+    
+    ,1.1
+    ,0.8
+    ,0.8
+    ,0.5
+  )
+  ,upper.CI = c(
+    0.7
+    ,0.8
+    ,0.9
+    ,0.9
+    
+    ,0.6
+    ,0.7
+    ,0.3
+    
+    ,1.4
+    ,1.0
+    ,1.0
+    ,0.7
+  )
+  ,n = rep(227, 11)
+  , dur.tf = c(rep(91.25, 4), 84, 112, 84,rep(91.25, 4) ) # add duration for each timeframe
+) %>% 
+
+## compute SD from CI, assuming normal distribution (which is NOT true)
+  mutate(SD= sqrt(n) * (upper.CI - lower.CI)/3.92)
+
+dat.PRIMS <- dat.PRIMS %>% 
+  mutate(ARR_simple= c(0.7, 0.7, 0.7, 0.7, 0.5, 0.6, 0.2, 1.2, 0.9, 0.7, 0.7))
+```
+
+```{r}
+ggplot2::qplot(tf, ARR, data=dat.PRIMS, geom="line") + 
+    geom_errorbar(aes(ymin=lower.CI, ymax=upper.CI), width=.1)
+```
+
+### generate data points that roughly fit the PRIMS data 
+
+I assume poisson distribution at this point. Also, for all timeframes ther minimun number of events is 0 and the maximum number of relapses is 3 for the "long" periods and 2 for the first and last pregnancy trimester
+
+
+
+```{r}
+### simulate data like found in the PRIMS data, here only one data set is produced
+N = 1000
+sim.PRIMS <- data.frame(ID = 1:N)
+
+for (counter in 1:nrow(dat.PRIMS)) {
+  if(dat.PRIMS$dur.tf[counter] >= 90){ # long time frames = 3 events possible
+    
+    #dat.PRIMS$ARR[counter] * dat.PRIMS$dur.tf[counter]) / 365 to sale back from ARR to rate!
+    
+    dist <- udpois((dat.PRIMS$ARR_simple[counter] * dat.PRIMS$dur.tf[counter]) / 365 , 0, 3)
+    gen <- darid.new(dist)
+    tmp <- as.data.frame(ur(gen, N))
+    names(tmp) <- paste0("count")
+    
+    tmp <- tmp%>% 
+      mutate(ID = row_number()) %>% 
+      mutate(ditf = dat.PRIMS$dur.tf[counter])
+    
+    tmp <- tmp %>% 
+      mutate(ARR =(count / ditf )* 365 )
+       
+    names(tmp) <- c(paste0("event_count_",counter), "ID", paste0("ditf_",counter), paste0("ARR_",counter))
+    sim.PRIMS <-  left_join(sim.PRIMS, tmp)
+  }
+  if(dat.PRIMS$dur.tf[counter] <90){ # short timeframes, 2 events possible
+    
+    dist <- udpois((dat.PRIMS$ARR_simple[counter] * dat.PRIMS$dur.tf[counter]) / 365, 0, 2)
+    gen <- darid.new(dist)
+    tmp <- as.data.frame(ur(gen, N))
+    names(tmp) <- paste0("count")
+    
+    tmp <- tmp%>% 
+      mutate(ID = row_number()) %>% 
+      mutate(ditf = dat.PRIMS$dur.tf[counter])
+    
+    tmp <- tmp %>% 
+      mutate(ARR =(count / ditf )* 365 )
+       
+    names(tmp) <- c(paste0("event_count_",counter), "ID", paste0("ditf_",counter), paste0("ARR_",counter))
+    sim.PRIMS <-  left_join(sim.PRIMS, tmp)
+  }
+}
+
+sum(sim.PRIMS$ARR_5) / N
+
+
+```
+
+### simulate multiple ARRs pre timeframe like in the PRIMS data
+```{r}
+# simulate multiple data sets to get multiple mean ARRs per timeframe
+
+N_datasets = 1000
+N_IDs = 1000
+
+sim.ARR.PRIMS <- data.frame(ARR_1 = NA,    
+                            ARR_2 = NA,    
+                            ARR_3 = NA,     
+                            ARR_4  = NA,    
+                            ARR_5  = NA,   
+                            ARR_6  = NA,   
+                            ARR_7 = NA,     
+                            ARR_8 = NA,   
+                            ARR_9 = NA,  
+                            ARR_10 = NA,   
+                            ARR_11  = NA)
+
+for (count_sets in 1:N_datasets) {
+  sim.PRIMS <- data.frame(ID = 1:N_IDs)
+  
+  for (counter in 1:nrow(dat.PRIMS)) {
+  if(dat.PRIMS$dur.tf[counter] >= 90){ # long time frames = 3 events possible
+    
+    #dat.PRIMS$ARR[counter] * dat.PRIMS$dur.tf[counter]) / 365 to sale back from ARR to rate!
+    
+    dist <- udpois((dat.PRIMS$ARR_simple[counter] * dat.PRIMS$dur.tf[counter]) / 365 , 0, 3)
+    gen <- darid.new(dist)
+    tmp <- as.data.frame(ur(gen, N_IDs))
+    names(tmp) <- paste0("count")
+    
+    tmp <- tmp%>% 
+      mutate(ID = row_number()) %>% 
+      mutate(ditf = dat.PRIMS$dur.tf[counter])
+    
+    tmp <- tmp %>% 
+      mutate(ARR =(count / ditf )* 365 )
+       
+    names(tmp) <- c(paste0("event_count_",counter), "ID", paste0("ditf_",counter), paste0("ARR_",counter))
+    sim.PRIMS <-  left_join(sim.PRIMS, tmp)
+  }
+  if(dat.PRIMS$dur.tf[counter] <90){ # short timeframes, 2 events possible
+    
+    dist <- udpois((dat.PRIMS$ARR_simple[counter] * dat.PRIMS$dur.tf[counter]) / 365, 0, 2)
+    gen <- darid.new(dist)
+    tmp <- as.data.frame(ur(gen, N_IDs))
+    names(tmp) <- paste0("count")
+    
+    tmp <- tmp%>% 
+      mutate(ID = row_number()) %>% 
+      mutate(ditf = dat.PRIMS$dur.tf[counter])
+    
+    tmp <- tmp %>% 
+      mutate(ARR =(count / ditf )* 365 )
+       
+    names(tmp) <- c(paste0("event_count_",counter), "ID", paste0("ditf_",counter), paste0("ARR_",counter))
+    sim.PRIMS <-  left_join(sim.PRIMS, tmp)
+  }
+  tmp <- sim.PRIMS %>% 
+    select(contains("ARR"))
+  
+  tmp <- colMeans(tmp)
+  }
+sim.ARR.PRIMS <-  rbind(sim.ARR.PRIMS, tmp) 
+}
+
+sim.ARR.PRIMS <- sim.ARR.PRIMS %>% 
+  filter(!is.na(ARR_1)) 
+
+```
+
+
+```{r}
+sim.ARR.PRIMS_long <- pivot_longer(
+  sim.ARR.PRIMS
+  ,everything()
+  ,names_to = "tf"
+  ,values_to = "simulated_mean_ARR"
+) %>% 
+  mutate(tf = readr::parse_number(tf))
+```
+
+
+```{r}
+qplot(tf, simulated_mean_ARR, data=sim.ARR.PRIMS_long, geom="point") #simulated PRIMS ARR in black
+last_plot() + geom_line(aes(x=tf, y=ARR), data = dat.PRIMS, col=5) # original PRIMS data in light blue
+```
+
+looks right---
+
+## Fitting different curves to the data
+
+### cubic linear model
+```{r}
+# I think one possible specification would be a cubic linear model
+y.hat <- predict(lm(simulated_mean_ARR~tf+I(tf^2)+I(tf^3), data=sim.ARR.PRIMS_long))
+qplot(tf, simulated_mean_ARR, data=sim.ARR.PRIMS_long, geom="point") #simulated PRIMS ARR in black
+last_plot() + geom_line(aes(x=tf, y=y.hat), col=2) # the fitted values red lines
+last_plot() + geom_line(aes(x=tf, y=ARR), data = dat.PRIMS, col=5) # original PRIMS data in light blue
+```
+
+Not really a good summary of the  data....
+
+### 5th order polynomial
+
+```{r}
+# or try a 5th order polynomial
+y.hat <- predict(lm(simulated_mean_ARR ~ poly(tf, 5, raw=TRUE), data=sim.ARR.PRIMS_long)) # estimating the model and obtaining the fitted values from the model
+
+qplot(tf, simulated_mean_ARR, data=sim.ARR.PRIMS_long, geom="point") #simulated PRIMS ARR in black
+last_plot() + geom_line(aes(x=tf, y=y.hat), col=2) # the fitted values red lines
+last_plot() + geom_line(aes(x=tf, y=ARR), data = dat.PRIMS, col=5) # original PRIMS data in light blue
+
+```
+
+
+Looks better, but not good. 
+
+### Splines:
+
+
+
+```{r}
+#loading the Splines Packages
+require(splines)
+
+attach(dat.PRIMS) #attaching  dataset
+
+tflims<-range(tf)
+tf.grid<-seq(from=tflims[1], to = tflims[2])
+
+
+#cutpoints at each tf arounf the pregnancy 4, 5, 6, 7
+fit<-lm(ARR ~ bs(tf,knots = c(4, 5, 6, 7)),data = dat.PRIMS )
+        
+summary(fit)
+
+#Plotting the Regression Line to the scatterplot   
+plot(tf,ARR,col="grey",xlab="tf",ylab="ARR")
+points(tf.grid,predict(fit,newdata = list(tf=tf.grid)),col="darkgreen",lwd=2,type="l")
+#adding cutpoints
+abline(v=c(25,40,60),lty=2,col="darkgreen")
+```
+
+```{r}
+#fitting smoothing splines using smooth.spline(X,Y,df=...)
+fit1<-smooth.spline(tf,ARR,df=10) #6 degrees of freedom
+#Plotting both cubic and Smoothing Splines 
+plot(tf,ARR,col="grey",xlab="tf",ylab="ARR")
+points(tf.grid,predict(fit,newdata = list(tf=tf.grid)),col="darkgreen",lwd=2,type="l")
+#adding cutpoints
+
+lines(fit1,col="red",lwd=2)
+legend("topright",c("Smoothing Spline with 10 df","Cubic Spline"),col=c("red","darkgreen"),lwd=2)
+```
+
+The smoothing spline looks best up to now. Maybe try on a simplyfied data set with stable ARR pre pregnancy and simpler drop post partum ?
+
+### smoothing splines with 10 df on "simple" ARR
+
+
+```{r}
+#fitting smoothing splines using smooth.spline(X,Y,df=...)
+fit1<-smooth.spline(tf,ARR_simple,df=10) #6 degrees of freedom
+#Plotting both cubic and Smoothing Splines 
+plot(tf,ARR_simple,col="grey",xlab="tf",ylab="ARR")
+
+lines(fit1,col="red",lwd=2)
+legend("topright",c("Smoothing Spline with 10 df"),col=c("red"),lwd=2)
+
+detach(dat.PRIMS)
+```
+ Perfect :) :) :) This, I can use !
+
+## base chosen method on long genrated dataset
+```{r}
+sim.ARR.PRIMS_long <- sim.ARR.PRIMS_long %>% 
+  arrange(tf) %>% 
+  mutate(index = row_number())
+
+```
+
+```{r}
+s
+
+# or try a b-spline
+y.hat <- predict(lm(simulated_mean_ARR ~ bs(index, 8), data=sim.ARR.PRIMS_long)) # estimating the model and obtaining the fitted values from the model
+
+qplot(tf, ARR_simple, data=dat.PRIMS, geom="point") #simulated PRIMS ARR in black
+last_plot() + geom_line(aes(x=index/1000, y=y.hat), data = sim.ARR.PRIMS_long , col=2) # the fitted values red lines
+last_plot() + geom_line(aes(x=tf, y=ARR), data = dat.PRIMS, col=5) # original PRIMS data in light blue
+
+```
+
+```{r}
+attach(sim.ARR.PRIMS_long)
+
+#fitting smoothing splines using smooth.spline(X,Y,df=...)
+fit1<-smooth.spline(index,simulated_mean_ARR,df=10) #6 degrees of freedom
+#Plotting both cubic and Smoothing Splines 
+detach(sim.ARR.PRIMS_long)
+qplot(tf, ARR_simple, data=dat.PRIMS, geom="point") #simulated PRIMS ARR in black
+last_plot() + geom_line(aes(x=index/1000, y=fit1$y), data = sim.ARR.PRIMS_long , col=2) # the fitted values red lines
+last_plot() + geom_line(aes(x=tf, y=ARR), data = dat.PRIMS, col=5) # original PRIMS data in light blue
+```
+
+## simEvent test
+
+```{r}
+base.hazard <- dat.PRIMS %>% 
+  select(tf, dur.tf, ARR_simple) %>% 
+  mutate(rate = ARR_simple/365)
+```
+
+
+```{r}
+### get an mean ARR of 0.7 across 100 subjects
+library(reda)
+test <- simEventData(100
+            ,method = "inversion"
+             ,origin= 1
+             ,endTime = 366
+             ,rho = 0.7 /365
+             )
+```
+
+```{r}
+
+test <- simEventData(10
+            ,method = "inversion"
+             ,origin= 1
+             ,endTime = 11
+             ,rho = function(timeVec) {
+               tmp <- as.data.frame(trunc(timeVec)) %>% mutate(y = NA);
+               for (i in 1:nrow(tmp)) {
+                 tmp$y[i] <- case_when(
+                   
+                   tmp[i,1] == 1
+                   ~ base.hazard$rate[1],
+                   tmp[i,1] == 2
+                   ~ base.hazard$rate[2],
+                   tmp[i,1] == 3
+                   ~ base.hazard$rate[3],
+                   tmp[i,1] == 4
+                   ~ base.hazard$rate[4],
+                   tmp[i,1] == 5
+                   ~ base.hazard$rate[5],
+                   tmp[i,1] == 6
+                   ~ base.hazard$rate[6],
+                   tmp[i,1] == 7
+                   ~ base.hazard$rate[7],
+                   tmp[i,1] == 8
+                   ~ base.hazard$rate[8],
+                   tmp[i,1] == 9
+                   ~ base.hazard$rate[9],
+                   tmp[i,1] == 10
+                   ~ base.hazard$rate[10],
+                   tmp[i,1] == 11
+                   ~ base.hazard$rate[11],
+                   tmp[i,1] == 12
+                   ~ base.hazard$rate[12],
+                   
+                 )
+               }
+              ; return(tmp$y)
+             }
+             )
+```
+
+
+```{r}
+test2 <- test %>% 
+  filter(event == 1) %>% 
+  mutate(tf = trunc(time)) %>% 
+  group_by(tf) %>% 
+  add_count(tf) %>% 
+  arrange(tf) %>% 
+  mutate(ARR = ((n/10/90))*365)
+
+tmp <- test2 %>% 
+  select(tf, ARR) %>% 
+  unique()
+```
+
+

@@ -1,0 +1,31 @@
+useDynLib(Runuran, .registration=TRUE, .fixes="C_")
+
+importFrom("methods", "is", "new")
+importMethodsFrom("methods", "initialize", "show")
+importFrom("stats", "pnbinom", "ppois")
+
+exportClass(unuran)
+exportClass(unuran.distr)
+exportClass(unuran.discr)
+exportClass(unuran.cont)
+exportClass(unuran.cmv)
+
+exportMethods(initialize)
+exportMethods(print)
+exportMethods(show)
+exportMethods(unuran.packed, "unuran.packed<-")
+exportMethods(use.aux.urng, "use.aux.urng<-")
+
+export(unuran.new)
+export(unuran.sample)
+export(unuran.details)
+export(unuran.verify.hat)
+export(unuran.is.inversion)
+
+exportPattern("\\.new$")
+exportPattern("^ur")
+exportPattern("^ud")
+export(uq,up)
+export(set.aux.seed)
+
+export(Runuran.options)

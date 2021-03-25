@@ -1,0 +1,45 @@
+AIC,rateReg-method      Akaike Information Criterion (AIC)
+BIC,rateReg-method      Bayesian Information Criterion (BIC)
+Recur                   Formula Response for Recurrent Event Data
+Recur-class             An S4 Class Representing Formula Response for
+                        Recurrent Event Data
+Recur-to                Recurrent Episodes
+Survr                   Formula Response for Recurrent Event Data
+Survr-class             An S4 Class Representing Formula Response
+as.character,Recur-method
+                        Convert An Recur Object to A Character Vector
+baseRate                Estimated Baseline Rate Function
+baseRate.rateReg-class
+                        An S4 Class Representing Estimated Baseline
+                        Rate Function
+check_Recur             Checks for Recurrent Event Data
+coef,rateReg-method     Estimated Coefficients of Covariates
+confint,rateReg-method
+                        Confidence Intervals for Covariate Coefficients
+is.Recur                Is the xect from the Recur class?
+mcf                     Mean Cumulative Function (MCF)
+mcf.formula-class       An S4 Class Representing Sample MCF
+mcf.rateReg-class       An S4 Class Respresenting Estimated MCF from a
+                        Fitted Model
+mcfDiff                 Comparing Two-Sample MCFs
+mcfDiff-class           An S4 Class Representing Sample MCF Difference
+mcfDiff.test-class      An S4 Class Representing the Two-Sample
+                        Pseudo-Score Test Results
+parametrize             Parametrizations of Covariates and Covariate
+                        Coefficients
+plot-method             Plot Baseline Rate or Mean Cumulative Function
+                        (MCF)
+rateReg                 Recurrent Events Regression Based on Counts and
+                        Rate Function
+rateReg-class           An S4 Class Representing a Fitted Model
+reda-package            Recurrent Event Data Analysis
+show-method             Show an object.
+simEvent                Simulated Survival times or Recurrent Events
+simEvent-class          An S4 Class for Simulated Recurrent Event or
+                        Survival Times
+simuDat                 Simulated Sample Dataset for Demonstration
+summary,rateReg-method
+                        Summarizing a Fitted Model
+summary.rateReg-class   An S4 Class Representing Summary of a Fitted
+                        Model
+valveSeats              Valve Seats Dataset

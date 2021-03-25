@@ -1,0 +1,661 @@
+---
+title: "Sim_test_3"
+author: "Marianne Tokic"
+date: "3/21/2021"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+# IMPORTANT! THIS IS A PACKRAT PROJECT!!! #
+### options
+knitr::opts_chunk$set(echo = F)
+
+### packages
+library(tidyr)
+library(dplyr)
+library(simrec)
+library(varhandle)
+library(ggplot2)
+library(Runuran)
+library(reda)
+```
+
+```{r}
+N= 100
+pregnancy = 280
+year = 365
+```
+
+## Overview
+
+in this script, I test out the simEvent function in the reda package, as simrec() doesn't allow for user specified baseline hazard rates.
+However, in simEvent() the rho-function is poorly defined and described. As such, I want to test out, whether it's feasable to (a) set the baseline hazard so, that there's an ARR of 0.7 as base and then (b) to model the pregnancy influence as a covariate
+
+## baseline hazard that leads to an ARR = 0.7
+### ARR = 0.7 in one year
+```{r}
+### get an mean ARR of 0.7 across 100 subjects
+
+test <- simEventData(1000
+            ,method = "inversion"
+             ,origin= 1
+             ,endTime = 366
+             ,rho = 0.7 /365
+             )
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+mean(tmp3$num_events)
+```
+
+this works reliably well.
+
+### ARR = 0.7 in 2 years plus pregnancy
+
+```{r}
+### get an mean ARR of 0.7 across 100 subjects
+
+test <- simEventData(N
+            ,method = "inversion"
+             ,origin= 1
+             ,endTime = pregnancy + 2*year
+             ,rho = 0.7 /365 #baseline hazard, scaled to DAY
+             )
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+mean(tmp3$num_events)/ (pregnancy + 2*year) * year
+```
+
+this works, too. It's improtant to keep the time in this function as DAYS and also scale the hazard to days.
+So, ARR to harzard per day = ARR/365!
+
+## Modulate the hazard in pregnancy
+
+### stable reduction in pregnancy (= days 366 - 646) to an ARR of 0.2
+
+```{r}
+### get an ARR of 0.7 in year pre pregnancy and post-partum. Reduce ARR in pregnancy to 0.2
+
+## set parameters for covariat = pregnancy effect
+### time-varying covariates and time-varying coefficients
+zFun <- function(time) {
+ as.numeric(time > 366 & time <= 646 ) #0 = outside of pregnancy; 1= in pregnancy
+}
+
+
+
+
+test <- simEventData(100
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = pregnancy + 2*year
+             ,rho =  0.7/year  #baseline hazard or event rate, scaled to DAY, ARR_roh/year
+             
+             ,z =  zFun
+             ,zCoef =  -0.5#(-0.5 * pregnancy)/year # works like this:
+                          # ARR_rho +  zCoef
+                          #for example: ARR_rho = 0.5, zCoef = 0.5  -> ARR in pregnancy = 1
+             
+            # , interarrival = function(n, rate) rgamma(n=1, shape =  rate*1000)
+             )
+
+## get total ARR
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+print(
+  paste0("ARR total= ", mean((tmp3$num_events/(pregnancy + 2*year))*year)
+  )
+)
+
+## get ARR year pre pregnancy
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1 & time < 366) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+print(
+  paste0("ARR prior to pregnancy= ", mean(tmp3$num_events)
+  )
+)
+
+## get ARR in pregnancy
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1 & time > 366 & time <= 646 ) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+print(
+  paste0("ARR in pregnancy= ", mean((tmp3$num_events/pregnancy)*year)
+  )
+)
+
+## get ARR post-partum
+tmp <- test %>% 
+  select(ID) %>% unique()
+
+tmp2 <- test %>% 
+  filter(event == 1 & time > 646) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+print(
+  paste0("ARR post-partum= ", mean((tmp3$num_events/year)*year)
+  )
+)
+
+```
+
+Now, I let this run in a loop to get 1000 estimated of the ARRs to inspect the simulation even more
+
+```{r include=FALSE}
+N_loops = 100
+N_IDs = 100
+
+base.haz = 1
+preg.effect = log(0.6)
+duration = pregnancy + 2*year
+
+Simulated.ARRs = data.frame(
+  Set = rep(NA, N_loops)
+  , ARR.pre = rep(NA, N_loops)
+  , ARR.in = rep(NA, N_loops)
+  ,ARR.post = rep(NA, N_loops)
+  ,ARR.total = rep(NA, N_loops)
+)
+
+zFun <- function(time) {
+ as.numeric(time > 366 & time <= 646 ) #0 = outside of pregnancy; 1= in pregnancy
+}
+
+
+for (counter in 1:N_loops) {
+## save number of the loop
+  Simulated.ARRs$Set[counter] <-  counter
+  
+
+## simulate the data
+sim <- simEventData(N_IDs
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = duration
+             ,rho =  base.haz/year  #baseline hazard or event rate, scaled to DAY, ARR_roh/year
+             
+             ,z =  zFun
+             ,zCoef =  preg.effect
+             )
+
+
+### get the ARRs
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated.ARRs$ARR.total[counter]=  mean((tmp3$num_events/(pregnancy + 2*year))*year)
+
+
+
+## get ARR year pre pregnancy
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1 & time < 366) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+
+#save
+Simulated.ARRs$ARR.pre[counter]=  mean((tmp3$num_events/year)*year)
+
+
+
+## get ARR in pregnancy
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1 & time > 366 & time <= 646 ) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated.ARRs$ARR.in[counter]=  mean((tmp3$num_events/pregnancy)*year)
+
+
+
+## get ARR post-partum
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1 & time > 646) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         )%>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated.ARRs$ARR.post[counter]=  mean((tmp3$num_events/year)*year)
+}
+
+
+```
+
+```{r}
+# checking how the zCoef interacts wth roh
+#Sim1 <- Simulated.ARRs # zCoef = -0.5 -> ARR.im ca 0.425 => 0.275 difference to base.haz
+mean(Simulated.ARRs$ARR.in)
+mean(Simulated.ARRs$ARR.pre)
+#Sim2<- Simulated.ARRs # zCoef = -0.7 -> ARR.in ca 0.343
+#Sim3<- Simulated.ARRs # zCoef = -1 -> ARR.in ca 0.249=> 0.275 difference
+#Sim4<- Simulated.ARRs # zCoef = -1.5 -> ARR.in ca 0.156
+#Sim5<- Simulated.ARRs # baseha z = 1, zCoef = -1.5 -> ARR.in ca 0.211 , exp(-1) = 0.368
+#Sim6<- Simulated.ARRs # baseha z = 1, zCoef = -2 -> ARR.in ca 0.137, exp(-2) = 0.135
+#Sim7<- Simulated.ARRs # baseha z = 1, zCoef = 0.5 -> ARR.in ca 1.667
+#Sim8<- Simulated.ARRs # baseha z = 1, zCoef = -0.5/year -> ARR.in ca 1...
+#Sim9<- Simulated.ARRs # baseha z = 1, zCoef = -0.5*year -> ARR.in ca 0.0001 ?
+Sim10<- Simulated.ARRs # baseha z = 1, zCoef = log(0.6) -> ARR.in ca 0.59
+```
+
+This interaction off effects is really puzzeling to me. Because of this I'll run a set of simpler simulations to eliminate possible sources error. Hiere I set roh = 1 and just simulate one year. Also, the Effekt of the covariat kicks in at day 1 
+
+```{r include=FALSE}
+#simpler simulation to understand the effects
+N_loops = 100
+N_IDs = 100
+
+base.haz = 0.7
+preg.effect = log(0.29)
+duration = year 
+
+Simulated2.ARR = data.frame(
+  Set = rep(NA, N_loops)
+  , ARR = rep(NA, N_loops)
+)
+
+zFun <- function(time) {
+ as.numeric(time > 1 ) 
+}
+
+
+for (counter in 1:N_loops) {
+## save number of the loop
+Simulated2.ARR$Set[counter] <-  counter
+  
+
+## simulate the data
+sim <- simEventData(N_IDs
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = duration
+             ,rho =  base.haz/year  #baseline hazard or event rate, scaled to DAY, ARR_roh/year
+             
+             ,z =  zFun
+             ,zCoef =  preg.effect
+             )
+
+
+### get the ARR
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), 365, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated2.ARR$ARR[counter]=  mean((tmp3$num_events/duration) *year)
+
+}
+
+
+```
+
+```{r}
+# checking how the zCoef interacts wth roh
+
+mean(Simulated2.ARR$ARR)
+
+#Sim.Simple<- Simulated.ARRs #base.haz = 1, zCoef = 0.5 -> ARR(simulated) = 1.6 
+#Sim.Simple1<- Simulated.ARRs #base.haz = 1, zCoef = 0 -> ARR(simulated) = 1.0062
+#Sim.Simple2<- Simulated.ARRs #base.haz = 1, zCoef = 2 -> ARR(simulated) = 7.37 ???? das entspricht base.haz * exp(zCoef), bzw 1 * 1.38
+## Wie gebe ich dann die zCoefs an? als log(Zielwert) ?
+# test mit der Notation log(Zielwert)
+#Sim.Simple3<- Simulated.ARRs #base.haz = 1, zCoef = log(0.5) -> ARR(simulated) = 0.49
+## Für positive Werte Funktioniert das sehr gut! da wir base.haz * exp(zCoef) haben, geben zCoef >0 aber <1 eine Reduktion in  ARR
+#Sim.Simple4<- Simulated.ARRs #base.haz = 1, zCoef = log(0.2) -> ARR(simulated) = 0.19
+# schaffe ich es bei einem base.haz von 0.7 die ARR auf 0.2 zu reduzieren? Dafür rechne ich ZielARR/base.haz = 0.2857 = 0.29
+Sim.Simple5<- Simulated.ARRs #base.haz = 0.7, zCoef = log(0.29) -> ARR(simulated) = 0.2047
+### YEAH!!! Das funktioniert!
+```
+
+Als nächstes möchte ich nund ie Erkentnisse daraus auf die große Simutation übertragen. Im ersten Schritt passe ich nur die ARR in der Schwangerschaft an die PRIMS Daten an mittels einer zCoef Funktion:
+
+```{r}
+### Data from the original PRIMS Paper
+dat.PRIMS <- data.frame(
+  timeframe = c(             "trim1.yp" 
+                            ,"trim2.yp"   
+                            ,"trim3.yp" 
+                            ,"trim4.yp" 
+                            ,"trim1.preg" 
+                            ,"trim2.preg" 
+                            ,"trim3.preg"
+                           , "trim1.pp"   
+                           , "trim2.pp"   
+                            ,"trim3.pp"   
+                           , "trim4.pp")
+  
+  ,tf = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+  , ARR = c(
+    0.6
+    ,0.7
+    ,0.7
+    ,0.8
+    
+    ,0.5
+    ,0.6
+    ,0.2
+    
+    ,1.2
+    ,0.9
+    ,0.9
+    ,0.6
+  )
+  , lower.CI = c(
+    0.5
+    ,0.6
+    ,0.6
+    ,0.7
+    
+    ,0.4
+    ,0.5
+    ,0.2
+    
+    ,1.1
+    ,0.8
+    ,0.8
+    ,0.5
+  )
+  ,upper.CI = c(
+    0.7
+    ,0.8
+    ,0.9
+    ,0.9
+    
+    ,0.6
+    ,0.7
+    ,0.3
+    
+    ,1.4
+    ,1.0
+    ,1.0
+    ,0.7
+  )
+  ,n = rep(227, 11)
+  , dur.tf = c(rep(91.25, 4), 84, 112, 84,rep(91.25, 4) ) # add duration for each timeframe
+) %>% 
+
+## compute SD from CI, assuming normal distribution (which is NOT true)
+  mutate(SD= sqrt(n) * (upper.CI - lower.CI)/3.92)
+
+dat.PRIMS <- dat.PRIMS %>% 
+  mutate(ARR_simple= c(0.7, 0.7, 0.7, 0.7, 0.5, 0.6, 0.2, 1.2, 0.9, 0.7, 0.7))
+```
+
+
+```{r include=FALSE}
+
+
+#simpler simulation to understand the effects
+N_loops = 10
+N_IDs = 100
+
+trimester1 = 84
+trimester2= 112
+trimester3= 84
+
+pregnancy = trimester1 + trimester2 + trimester3
+
+base.haz = 0.7
+#preg.effect = log(0.29)
+duration = pregnancy + 2 * year 
+
+Simulated2.ARR = data.frame(
+  Set = rep(NA, N_loops)
+  , ARR.in = rep(NA, N_loops)
+  , ARR.total = rep(NA, N_loops)
+)
+
+zFun <- function(time) { # just an effect for the pregnancy, is = 1 in pregnancy and =0 in all other parts
+ as.numeric(time > year & time <= pregnancy + year ) 
+  #ifelse(time > 1, 1, 0)
+}
+
+zCoefFun <- function(time) { # let the effect of the Preganancy vary over time
+  #for the first try, let me see how the log/exp stuff interacts with the function formualtion -> it need to be log(X)!
+  # ifelse(time > year, log(0.29), 0)
+  
+  #now try to simulate with the PRIMS data for pregnancy
+  case_when(
+    time > year & 
+    time <= year + trimester1
+    ~ log( dat.PRIMS[5,3]/base.haz), # trimester 1
+        
+    time > year + trimester1 & 
+    time <= year + trimester1 + trimester3
+    ~ log( dat.PRIMS[6,3]/base.haz), # trimester 2
+    
+    time > year + trimester1 + trimester2 & 
+    time <= year + pregnancy
+    ~ log(dat.PRIMS[7,3]/base.haz), # trimester 3
+  
+  # time > year + 84 & 
+  #   time <= year + 84 + 112
+  #   ~ log( dat.PRIMS[5,3]/base.haz/pregnancy), #sixth timepoint, ARR cloumn in the PRIMS data
+  # 
+  # time > year + 84 & 
+  #   time <= year + 84 + 112
+  #   ~ log( dat.PRIMS[5,3]/base.haz/pregnancy), #seventh timepoint, ARR cloumn in the PRIMS data
+  # 
+  T ~0
+  )
+  }
+
+
+for (counter in 1:N_loops) {
+## save number of the loop
+Simulated2.ARR$Set[counter] <-  counter
+
+
+## simulate the data
+sim <- simEventData(N_IDs
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = duration
+             ,rho =  base.haz/year  #baseline hazard or event rate, scaled to DAY, ARR_roh/year
+             
+             ,z =  zFun
+             ,zCoef =  zCoefFun
+             )
+
+
+### get the ARRs
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), duration, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated2.ARR$ARR.total[counter]=  mean(tmp3$num_events)/ duration *year
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1 &
+        X == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), duration, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated2.ARR$ARR.in[counter]=  mean(tmp3$num_events) / pregnancy * year
+
+}
+expected.rate = (dat.PRIMS[5,3] * 84 + dat.PRIMS[6,3] * 112 + dat.PRIMS[7,3] * 84)/280
+
+mean(Simulated2.ARR$ARR.in)
+expected.rate 
+
+
+```
+
+Das scheint bisher ganz gut zu funktionieren...Im nächsten Schritt möchte ich gerne versuchen, die ARR post-partum anzupassen.

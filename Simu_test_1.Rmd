@@ -36,7 +36,7 @@ Simulation of just relpase data: about a risk of 0.5 per year across group, min.
 
 ### observation parameters
 
-N_goal <-  100000 #numers of subjects wanted
+N_goal <-  1000 #numers of subjects wanted
 N <- 100 # Number of simulated Subjects per run off the loop
 N_loops <- N_goal/N
 ##
@@ -63,9 +63,9 @@ par.z <- 0 # turned off
 # with lambda= a = 0.5until t1 and lambda = b = 0.5 after t1
 # t1 is set to one day, so the mean ARR *should* be 0.5
 dist.rec="step"
-a= 0.5 / year
-b= 0.5 / year
-t_1 = 1
+a= 0.8 / year
+b= 0.3 / year
+t_1 = (2*year + pregnancy) /2
 par.rec=c(a,b,t_1)
 
 ## Follow up time

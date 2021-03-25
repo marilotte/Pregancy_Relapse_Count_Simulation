@@ -1,0 +1,134 @@
+Runuran-package         Runuran - R interface to Universal Non-Uniform
+                        RANdom variate generators library
+Runuran.distributions   UNU.RAN distribution objects
+Runuran.options         Set or return options for Runuran library
+Runuran.special.generators
+                        Generators for distributions based on methods
+                        from the UNU.RAN library
+arou.new                UNU.RAN generator based on Automatic
+                        Ratio-Of-Uniforms method (AROU)
+ars.new                 UNU.RAN generator based on Adaptive Rejection
+                        Sampling (ARS)
+dari.new                UNU.RAN generator based on Discrete Automatic
+                        Rejection Inversion (DARI)
+dau.new                 UNU.RAN generator based on the Alias method
+                        (DAU)
+dgt.new                 UNU.RAN generator based on table guided
+                        discrete inversion (DGT)
+hitro.new               UNU.RAN generator based on Hit-and-Run sampler
+                        (HITRO)
+itdr.new                UNU.RAN generator based on Inverse Transformed
+                        Density Rejection (ITDR)
+mixt.new                UNU.RAN generator for finite mixture of
+                        distributions
+pinv.new                UNU.RAN generator based on Polynomial
+                        interpolation of INVerse CDF (PINV)
+srou.new                UNU.RAN generator based on Simple
+                        Ratio-Of-Uniforms Method (SROU)
+tabl.new                UNU.RAN generator based on TABLe based
+                        Rejection (TABL)
+tdr.new                 UNU.RAN generator based on Transformed Density
+                        Rejection (TDR)
+ud                      Density function for "unuran" object
+udbeta                  UNU.RAN object for Beta distribution
+udbinom                 UNU.RAN object for Binomial distribution
+udcauchy                UNU.RAN object for Cauchy distribution
+udchi                   UNU.RAN object for Chi distribution
+udchisq                 UNU.RAN object for Chi-Squared distribution
+udexp                   UNU.RAN object for Exponential distribution
+udf                     UNU.RAN object for F distribution
+udfrechet               UNU.RAN object for Frechet distribution
+udgamma                 UNU.RAN object for Gamma distribution
+udgeom                  UNU.RAN object for Geometric distribution
+udghyp                  UNU.RAN object for Generalized Hyperbolic
+                        distribution
+udgig                   UNU.RAN object for Generalized Inverse Gaussian
+                        distribution
+udgumbel                UNU.RAN object for Gumbel distribution
+udhyper                 UNU.RAN object for Hypergeometric distribution
+udhyperbolic            UNU.RAN object for Hyperbolic distribution
+udig                    UNU.RAN object for Inverse Gaussian
+                        distribution
+udlaplace               UNU.RAN object for Laplace distribution
+udlnorm                 UNU.RAN object for Log Normal distribution
+udlogarithmic           UNU.RAN object for Logarithmic distribution
+udlogis                 UNU.RAN object for Logistic distribution
+udlomax                 UNU.RAN object for Lomax distribution
+udmeixner               UNU.RAN object for Meixner distribution
+udnbinom                UNU.RAN object for Negative Binomial
+                        distribution
+udnorm                  UNU.RAN object for Normal distribution
+udpareto                UNU.RAN object for Pareto distribution
+udpois                  UNU.RAN object for Poisson distribution
+udpowerexp              UNU.RAN object for Powerexponential
+                        distribution
+udrayleigh              UNU.RAN object for Rayleigh distribution
+udslash                 UNU.RAN object for Slash distribution
+udt                     UNU.RAN object for Student t distribution
+udvg                    UNU.RAN object for Variance Gamma distribution
+udweibull               UNU.RAN object for Weibull distribution
+unuran-class            Class "unuran" - Universal Non-Uniform RANdom
+                        variate generators
+unuran.cmv-class        Class "unuran.cmv" for Continuous Multivariate
+                        Distribution
+unuran.cmv.new          Create a UNU.RAN continuous multivariate
+                        distribution object
+unuran.cont-class       Class "unuran.cont" for Continuous Distribution
+unuran.cont.new         Create a UNU.RAN continuous univariate
+                        distribution object
+unuran.details          Information on a given "unuran" generator
+                        object
+unuran.discr-class      Class "unuran.discr" for Discrete Distribution
+unuran.discr.new        Create a UNU.RAN discrete univariate
+                        distribution object
+unuran.distr-class      Virtual class "unuran.distr"
+unuran.is.inversion     Test whether a "unuran" generator object
+                        implements an inversion method
+unuran.new              Create a UNU.RAN object
+unuran.packed-method    Pack "unuran" object
+unuran.verify.hat       Verify hat and squeezes in a "unuran" generator
+                        object
+up                      Distribution function for "unuran" object
+uq                      Quantile function for "unuran" object
+ur                      Sample from a distribution specified by a
+                        "unuran" object
+urbeta                  UNU.RAN Beta random variate generator
+urbinom                 UNU.RAN Binomial random variate generator
+urburr                  UNU.RAN Burr random variate generator
+urcauchy                UNU.RAN Cauchy random variate generator
+urchi                   UNU.RAN Chi random variate generator
+urchisq                 UNU.RAN Chi-Squared random variate generator
+urdgt                   UNU.RAN discrete random variate generator
+urexp                   UNU.RAN Exponential random variate generator
+urextremeI              UNU.RAN Extreme value type I (Gumbel-type)
+                        random variate generator
+urextremeII             UNU.RAN Extreme value type II (Frechet-type)
+                        random variate generator
+urf                     UNU.RAN F random variate generator
+urgamma                 UNU.RAN Gamma random variate generator
+urgeom                  UNU.RAN Geometric random variate generator
+urgig                   UNU.RAN Generalized Inverse Gaussian
+                        Distribution variate generator
+urhyper                 UNU.RAN Hypergeometric random variate generator
+urhyperbolic            UNU.RAN Hyperbolic random variate generator
+urlaplace               UNU.RAN Laplace random variate generator
+urlnorm                 UNU.RAN Log-Normal random variate generator
+urlogarithmic           UNU.RAN Logarithmic random variate generator
+urlogis                 UNU.RAN Logistic random variate generator
+urlomax                 UNU.RAN Lomax random variate generator
+urnbinom                UNU.RAN Negative Binomial random variate
+                        generator
+urnorm                  UNU.RAN Normal random variate generator
+urpareto                UNU.RAN Pareto random variate generator
+urplanck                UNU.RAN Planck random variate generator
+urpois                  UNU.RAN Poisson random variate generator
+urpowerexp              UNU.RAN Powerexponential random variate
+                        generator
+urrayleigh              UNU.RAN Rayleigh random variate generator
+urt                     UNU.RAN Student t random variate generator
+urtriang                UNU.RAN Triangular random variate generator
+urweibull               UNU.RAN Weibull random variate generator
+use.aux.urng-method     Use auxiliary random number generator for
+                        Runuran objects
+vnrou.new               UNU.RAN generator based on Multivariate Naive
+                        Ratio-Of-Uniforms method (VNROU)
