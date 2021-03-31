@@ -218,7 +218,7 @@ IDs <- dat.sim %>% # get all IDs
 tmp <- dat.sim %>% # get all events
   filter(event == 1) %>% 
   mutate(
-    tf = case_when( # sort events into timeframes
+    tf = case_when( # sort evets into timeframes
       
       time <= quarter_year
       ~ 1,
