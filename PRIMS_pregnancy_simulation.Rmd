@@ -308,7 +308,7 @@ dat.sim_counting <- dat.sim_counting %>% # remove the NA entry
   filter(!is.na(ID)) %>% 
   arrange(ID)
 
-test <- left_join( dat.sim_counting, num_events) %>% 
+dat.sim_counting <- left_join( dat.sim_counting, num_events) %>% 
   arrange(ID) %>% 
   mutate(num_events = ifelse(is.na(num_events), 0, num_events)) %>% 
   mutate(ditf = case_when(
@@ -328,7 +328,7 @@ test <- left_join( dat.sim_counting, num_events) %>%
 
 ```{r}
 # get mean ARR per tf
-tmp <- test %>% 
+tmp <- dat.sim_counting %>% 
   mutate(ARR = 
            ifelse(num_events > 0, num_events/ditf * year, 0)
          ) %>% 
@@ -396,4 +396,393 @@ ggplot2::ggplot( data=tmp3, aes(x=tf, y=ARR)) +
   
 ```
 
+This looks very good. 
+Here is the number IDs per number of events
+```{r}
+tmp <- dat.sim %>% 
+  group_by(ID) %>% 
+  mutate( num_events = sum(event)
+         )
+
+hist(tmp$num_events)
+
+```
+```{r}
+m.sim1 <- lme4::glmer(num_events ~ as.factor(tf) 
+                      + (1|ID) -1
+            , offset = log(ditf/year)
+            , data = dat.sim_counting
+            , family = poisson()
+            )
+
+sjPlot::tab_model(m.sim1)
+```
+
+
+```{r}
+# with(dat.sim_counting,table(as.factor(tf),num_events))
+# 
+# library(dotwhisker)
+# library(broom.mixed)
+# dwplot(m.sim1,effects="fixed")
+# library(ggplot2)
+# theme_set(theme_bw())
+# ggplot(dat.sim_counting,aes(num_events,tf,colour=num_events))+
+#     stat_sum(alpha=0.5)
+```
+
+## simulation 2: baseline hazard via means of the PRIMS study, no smoothing,  IAT modification, no covariats
+
+```{r}
+ ## Set simulation parameters
+ N_IDs = 10
+ N_loops = 100
+ 
+ ## Set times
+trimester1 = 84
+trimester2= 112
+trimester3= 84
+year = 365
+quarter_year = year/4
+pregnancy = trimester1 + trimester2 + trimester3
+
+duration = year + pregnancy + year
+```
+
+
+Simulation of `r N_IDs` x `r N_loops ` pregnancies. baseline hazard sourced via the mean ARRS in the PRIMS study.
+```{r}
+####bazeline hazard = rhoFun, full time simulated, IAT simulation
+
+
+
+# ## Set functions for simulation
+# # baseline hazard
+#  rhoFun = function(timevector, b) { 
+#    timepoint <- case_when( 
+#      
+#     timevector <= year 
+#      ~ 4, 
+#      
+#      timevector > year &
+#      timevector <= year + trimester1
+#      ~ 5, 
+#      
+#      timevector > year + trimester1 &
+#      timevector <= year + trimester1 + trimester2
+#      ~ 6, 
+#     
+#      timevector > year + trimester1 + trimester2 &
+#      timevector <= year + pregnancy
+#      ~ 7,
+#     
+#      timevector > year + pregnancy &
+#     timevector <= year + pregnancy + quarter_year
+#      ~ 8,
+#     
+#     timevector > year + pregnancy + quarter_year &
+#     timevector <= year + pregnancy + quarter_year + quarter_year
+#      ~ 9,
+#      
+#     timevector > year + pregnancy + quarter_year + quarter_year
+#      ~ 10,
+#    )
+#    return( b[timepoint]/year)
+#   
+#  }
+#  ## IAT function
+#  custom_IA <- function(rate) {
+#   truncnorm::rtruncnorm(n=1, a=30, b=Inf, mean=400, sd=13)
+# }
+#  
+#  ## make dataframe to save simulated data
+# dat.sim2 <- data.frame(ID = NA
+#                        ,time = NA
+#                        , event = NA
+#                        , origin = NA
+#                        , X = NA
+#                        )
+#  
+#  ## Simulation
+#  for (counter in 1:N_loops) {
+#  sim <- simEventData(N_IDs
+#               ,method = "inversion"
+#               ,origin= 1
+#               ,endTime = duration
+#               ,rho = rhoFun
+#               ,interarrival = custom_IA
+#               ,arguments = list(
+#                rho = list(b = dat.PRIMS$ARR_simple)
+#                 )
+#    )
+#  
+#  sim <- sim %>% 
+#    mutate(ID = ID + (counter*N_loops*N_IDs))
+#  
+# 
+#  dat.sim2 <-  rbind(dat.sim2, sim)
+#  }
+#  
+#  dat.sim2 <- dat.sim2 %>% # remove the NA entry
+#    filter(!is.na(ID))
+#  
+#  save(dat.sim2, file = "dat.sim2")
+
+ load("dat.sim2")
+```
+
+
+```{r}
+## sorting events to timeframes
+
+IDs <- dat.sim2 %>% # get all IDs
+  select(ID) %>% unique()
+
+tmp <- dat.sim2 %>% # get all events
+  filter(event == 1) %>% 
+  mutate(
+    tf = case_when( # sort evets into timeframes
+      
+      time <= quarter_year
+      ~ 1,
+      
+      time <= quarter_year*2 &
+      time > quarter_year
+      ~ 2,
+      
+      
+    time <= quarter_year*3 &
+    time > quarter_year*2
+      ~ 3,
+    
+    time > quarter_year*3 &
+    time <= year
+    ~ 4,
+    
+    time > year &
+    time <= year + trimester1
+    ~ 5,
+    
+    time > year + trimester1 &
+    time <= year+ trimester1 + trimester2
+    ~ 6,
+    
+    time > year + trimester1+ trimester2 &
+    time <= year + pregnancy
+    ~ 7,
+    
+    time > year + pregnancy &
+    time <= year + pregnancy + quarter_year
+    ~ 8,
+    
+    time > year + pregnancy + quarter_year &
+    time <= year + pregnancy + (2*quarter_year)
+    ~ 9,
+    
+    time > year + pregnancy +(2*quarter_year) &
+    time <= year + pregnancy + (3*quarter_year)
+    ~ 10,
+    
+    time > year + pregnancy +(3*quarter_year) &
+    time <= year + pregnancy + year
+    ~ 11,
+  )
+)
+
+num_events <- tmp %>% 
+  group_by(tf) %>% 
+  add_count(ID, name = "num_events") %>% 
+  ungroup() %>% 
+  select(ID, tf, num_events) %>% unique()
+
+dat.sim_counting <- data.frame(ID = NA
+                      ,tf = NA)
+
+
+for (counter in 1:11) {
+  
+  tmp2 <- IDs %>% 
+    mutate(
+      tf = counter
+    )
+  
+  
+ dat.sim_counting <- rbind(dat.sim_counting, tmp2) 
+}
+
+dat.sim_counting <- dat.sim_counting %>% # remove the NA entry
+  filter(!is.na(ID)) %>% 
+  arrange(ID)
+
+dat.sim_counting <- left_join( dat.sim_counting, num_events) %>% 
+  arrange(ID) %>% 
+  mutate(num_events = ifelse(is.na(num_events), 0, num_events)) %>% 
+  mutate(ditf = case_when(
+    
+    tf == 5
+    ~ trimester1,
+    
+    tf == 6
+    ~ trimester2,
+    
+    tf == 7
+    ~ trimester3,
+    
+    T ~ quarter_year
+  ))
+```
+
+```{r}
+# get mean ARR per tf
+tmp <- dat.sim_counting %>% 
+  mutate(ARR = 
+           ifelse(num_events > 0, num_events/ditf * year, 0)
+         ) %>% 
+  select(ID, ARR, tf)
+
+tmp2 <- tidyr::pivot_wider(tmp
+                    , id_cols = ID
+                    , names_from = tf
+                    , values_from = ARR
+                    )
+
+tmp3 <- data.frame(
+  tf = 1:11
+  ,ARR = c(
+    mean(tmp2$`1`)
+    ,mean(tmp2$`2`)
+    ,mean(tmp2$`3`)
+    ,mean(tmp2$`4`)
+    ,mean(tmp2$`5`)
+    ,mean(tmp2$`6`)
+    ,mean(tmp2$`7`)
+    ,mean(tmp2$`8`)
+    ,mean(tmp2$`9`)
+    ,mean(tmp2$`10`)
+    ,mean(tmp2$`11`)
+  )
+  , lower.CL  = c(
+    t.test(tmp2$`1`)$"conf.int"[1]
+    , t.test(tmp2$`2`)$"conf.int"[1]
+    , t.test(tmp2$`3`)$"conf.int"[1]
+    , t.test(tmp2$`4`)$"conf.int"[1]
+    , t.test(tmp2$`5`)$"conf.int"[1]
+    , t.test(tmp2$`6`)$"conf.int"[1]
+    , t.test(tmp2$`7`)$"conf.int"[1]
+    , t.test(tmp2$`8`)$"conf.int"[1]
+    , t.test(tmp2$`9`)$"conf.int"[1]
+    , t.test(tmp2$`10`)$"conf.int"[1]
+    , t.test(tmp2$`11`)$"conf.int"[1]
+  )
+  , upper.CL  = c(
+    t.test(tmp2$`1`)$"conf.int"[2]
+    , t.test(tmp2$`2`)$"conf.int"[2]
+    , t.test(tmp2$`3`)$"conf.int"[2]
+    , t.test(tmp2$`4`)$"conf.int"[2]
+    , t.test(tmp2$`5`)$"conf.int"[2]
+    , t.test(tmp2$`6`)$"conf.int"[2]
+    , t.test(tmp2$`7`)$"conf.int"[2]
+    , t.test(tmp2$`8`)$"conf.int"[2]
+    , t.test(tmp2$`9`)$"conf.int"[2]
+    , t.test(tmp2$`10`)$"conf.int"[2]
+    , t.test(tmp2$`11`)$"conf.int"[2]
+  )
+)
+
+```
+
+```{r}
+#plot
+ggplot2::ggplot( data=tmp3, aes(x=tf, y=ARR)) + 
+  geom_rect( mapping=aes(xmin=4.8, xmax=7.2, ymin=0, ymax=0.75, fill= "pregnancy"), color="grey", alpha=0.5)+
+  geom_line(color = "blue")+
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=.1, color ="blue") +
+  ggtitle("Simulated data, 95%CI for the mean, IAT rtruncnorm(mean 400, sd 13)")
+  
+  
+```
+
+This looks about right. However, it's strange, that every ID has exactly 2 events:
+```{r}
+tmp <- dat.sim2 %>% 
+  group_by(ID) %>% 
+  mutate( num_events = sum(event)
+         )
+
+hist(tmp$num_events)
+
+
+```
+
+
+## Poisson of the simulated data
+
+```{r}
+m.sim1 <- lme4::glmer(num_events ~ as.factor(tf) 
+                      + (tf|ID) -1
+            , offset = log(ditf/year)
+            , data = dat.sim_counting
+            , family = poisson()
+            )
+```
+
+```{r}
+lme4::isSingular(m.sim1, tol = 1e-4)
+```
+
+From lme4:
+"omplex mixed-effect models (i.e., those with a large number of variance-covariance parameters) frequently result in singular fits, i.e. estimated variance-covariance matrices with less than full rank. Less technically, this means that some "dimensions" of the variance-covariance matrix have been estimated as exactly zero. For scalar random effects such as intercept-only models, or 2-dimensional random effects such as intercept+slope models, singularity is relatively easy to detect because it leads to random-effect variance estimates of (nearly) zero, or estimates of correlations that are (almost) exactly -1 or 1. However, for more complex models (variance-covariance matrices of dimension >=3) singularity can be hard to detect; models can often be singular without any of their individual variances being close to zero or correlations being close to +/-1.
+
+While singular models are statistically well defined (it is theoretically sensible for the true maximum likelihood estimate to correspond to a singular fit), there are real concerns that (1) singular fits correspond to overfitted models that may have poor power; (2) chances of numerical problems and mis-convergence are higher for singular models (e.g. it may be computationally difficult to compute profile confidence intervals for such models); (3) standard inferential procedures such as Wald statistics and likelihood ratio tests may be inappropriate."
+
+So let's look at the model...
+
+```{r}
+sjPlot::tab_model(m.sim1)
+```
+
+As expected, I find exactly the mean ARR we observed, which are nearly identical to effects put into the simulation:
+```{r}
+tmp <- tmp3 %>% 
+  left_join(dat.PRIMS %>% select(tf, ARR_simple))
+
+tmp2 <- summary(m.sim1)$coefficients %>% as.data.frame()
+
+tmp <- tmp %>% 
+  cbind(., exp(tmp2$Estimate))
+
+names(tmp) <- c(
+  "time frame"
+  , "observed ARR"
+  , "observed lower CL"
+  , "observed uppler CL"
+  , "baseline hazard"
+  , "estimated ARR"
+)
+
+
+kableExtra::kable(tmp)
+```
+
+
+## survival analyisis: Andersen-Gills
+
+```{r}
+
+## to do : coding of the data set into survival data with timedependent covariat: tf
+# this data formating SUCKS so much!
+
+
+```
+
+```{r}
+# need to ne redone
+# library(survival)
+# surv1 <- with(dat.sim_surv, Surv(time, event))
+# 
+# m.sim2 <- coxph(surv1 ~ as.factor(tf), data = dat.sim_surv)
+# 
+# summary(m.sim2)
+
+```
 

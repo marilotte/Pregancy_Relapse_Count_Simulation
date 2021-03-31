@@ -1,0 +1,41 @@
+dist_chisq              Plot chi-squared distributions
+dist_f                  Plot F distributions
+dist_norm               Plot normal distributions
+dist_t                  Plot t-distributions
+efc                     Sample dataset from the EUROFAMCARE project
+plot_frq                Plot frequencies of variables
+plot_gpt                Plot grouped proportional tables
+plot_grid               Arrange list of plots as grid
+plot_grpfrq             Plot grouped or stacked frequencies
+plot_kfold_cv           Plot model fit from k-fold cross-validation
+plot_likert             Plot likert scales as centered stacked bars
+plot_model              Plot regression models
+plot_models             Forest plot of multiple regression models
+plot_residuals          Plot predicted values and their residuals
+plot_scatter            Plot (grouped) scatter plots
+plot_stackfrq           Plot stacked proportional bars
+plot_xtab               Plot contingency tables
+save_plot               Save ggplot-figure for print publication
+set_theme               Set global theme options for sjp-functions
+sjPlot-package          Data Visualization for Statistics in Social
+                        Science
+sjPlot-themes           Modify plot appearance
+sjp.aov1                Plot One-Way-Anova tables
+sjp.chi2                Plot Pearson's Chi2-Test of multiple
+                        contingency tables
+sjp.corr                Plot correlation matrix
+sjp.poly                Plot polynomials for (generalized) linear
+                        regression
+sjplot                  Wrapper to create plots and tables within a
+                        pipe-workflow
+tab_corr                Summary of correlations as HTML table
+tab_df                  Print data frames as HTML table.
+tab_fa                  Summary of factor analysis as HTML table
+tab_itemscale           Summary of item analysis of an item scale as
+                        HTML table
+tab_model               Print regression models as HTML table
+tab_pca                 Summary of principal component analysis as HTML
+                        table
+tab_stackfrq            Summary of stacked frequencies as HTML table
+tab_xtab                Summary of contingency tables as HTML table
+view_df                 View structure of labelled data frames

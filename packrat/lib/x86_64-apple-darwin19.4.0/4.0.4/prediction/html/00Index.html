@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head><title>R: Tidy, Type-Safe 'prediction()' Methods</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="R.css" />
+</head><body>
+<h1> Tidy, Type-Safe 'prediction()' Methods
+<img class="toplogo" src="../../../doc/html/Rlogo.svg" alt="[R logo]" />
+</h1>
+<hr/>
+<div style="text-align: center;">
+<a href="../../../doc/html/packages.html"><img class="arrow" src="../../../doc/html/left.jpg" alt="[Up]" /></a>
+<a href="../../../doc/html/index.html"><img class="arrow" src="../../../doc/html/up.jpg" alt="[Top]" /></a>
+</div><h2>Documentation for package &lsquo;prediction&rsquo; version 0.3.14</h2>
+
+<ul><li><a href="../DESCRIPTION">DESCRIPTION file</a>.</li>
+</ul>
+
+<h2>Help Pages</h2>
+
+
+<table width="100%">
+<tr><td style="width: 25%;"><a href="prediction.html">prediction-package</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="build_datalist.html">build_datalist</a></td>
+<td>Build list of data.frames</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.crch</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.data.frame</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.default</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.glimML</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.glm</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.hxlr</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.lm</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.mca</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.merMod</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.svyglm</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.train</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.vgam</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="find_data.html">find_data.vglm</a></td>
+<td>Extract data from a model object</td></tr>
+<tr><td style="width: 25%;"><a href="margex.html">margex</a></td>
+<td>Artificial data for margins, copied from Stata</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">mean_or_mode</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">mean_or_mode.data.frame</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">mean_or_mode.default</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">mean_or_mode.numeric</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">median_or_mode</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">median_or_mode.data.frame</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">median_or_mode.default</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="mean_or_mode.html">median_or_mode.numeric</a></td>
+<td>Class-dependent variable aggregation</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.ar</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.Arima</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.arima0</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.betareg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.biglm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.bruto</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.clm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.coxph</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.crch</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.default</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.earth</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.fda</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.Gam</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.gausspr</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.gee</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.glimML</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.glimQL</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.glm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.glmnet</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.glmx</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.gls</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.hetglm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.hurdle</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.hxlr</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.ivreg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.knnreg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.kqr</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.ksvm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.lm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.lme</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.loess</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.lqs</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.mars</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.mca</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.mclogit</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.merMod</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.mnp</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.multinom</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.nls</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.nnet</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.plm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.polr</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.polyreg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.ppr</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.princomp</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.rlm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.rpart</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.rq</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.selection</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.speedglm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.speedlm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.survreg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.svm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.svyglm</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.train</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.truncreg</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction.zeroinfl</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="prediction.html">prediction_summary</a></td>
+<td>Extract Predictions from a Model Object</td></tr>
+<tr><td style="width: 25%;"><a href="seq_range.html">seq_range</a></td>
+<td>Create a sequence over the range of a vector</td></tr>
+</table>
+</body></html>

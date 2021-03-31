@@ -1,0 +1,12 @@
+add_brackets            Add Labelled Brackets to Group Predictors in a
+                        Dot-and-Whisker Plot
+by_2sd                  Rescale regression results by multiplying by 2
+                        standard deviations
+dwplot                  Dot-and-Whisker Plots of Regression Results
+relabel_predictors      Relabel the Predictors in a Tidy Data Frame of
+                        Regression Results
+relabel_y_axis          Relabel the Y-Axis of a Dot-Whisker Plot
+secret_weapon           Generate a 'Secret Weapon' Plot of Regression
+                        Results from Multiple Models
+small_multiple          Generate a 'Small Multiple' Plot of Regression
+                        Results

@@ -1,0 +1,6 @@
+build_datalist          Build list of data.frames
+find_data               Extract data from a model object
+margex                  Artificial data for margins, copied from Stata
+mean_or_mode            Class-dependent variable aggregation
+prediction-package      Extract Predictions from a Model Object
+seq_range               Create a sequence over the range of a vector
