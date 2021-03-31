@@ -531,8 +531,6 @@ dat.PRIMS <- dat.PRIMS %>%
 
 
 ```{r include=FALSE}
-
-
 #simpler simulation to understand the effects
 N_loops = 10
 N_IDs = 100
@@ -659,3 +657,204 @@ expected.rate
 ```
 
 Das scheint bisher ganz gut zu funktionieren...Im nächsten Schritt möchte ich gerne versuchen, die ARR post-partum anzupassen.
+
+## Post partum Gipfel modellieren
+
+
+```{r include=FALSE}
+#simpler simulation to understand the effects
+N_loops = 1
+N_IDs = 100
+
+trimester1 = 84
+trimester2= 112
+trimester3= 84
+
+pregnancy = trimester1 + trimester2 + trimester3
+
+base.haz = 0.7
+
+duration = pregnancy + 2 * year 
+
+Simulated2.ARR = data.frame(
+  Set = rep(NA, N_loops)
+  , ARR.in = rep(NA, N_loops)
+  , ARR.total = rep(NA, N_loops)
+)
+
+zFun <- function(time) { # effect in pregnancy and postpartum
+ as.numeric(time > year #& time <= pregnancy + year 
+            ) 
+}
+
+zCoefFun <- function(time) { # let the effect of the Preganancy and post partum vary over time
+
+  case_when(
+    time > year & 
+    time <= year + trimester1
+    ~ log( dat.PRIMS[5,3]/base.haz), # trimester 1
+        
+    time > year + trimester1 & 
+    time <= year + trimester1 + trimester3
+    ~ log( dat.PRIMS[6,3]/base.haz), # trimester 2
+    
+    time > year + trimester1 + trimester2 & 
+    time <= year + pregnancy
+    ~ log(dat.PRIMS[7,3]/base.haz), # trimester 3
+    
+    time > year + pregnancy & 
+    time <= year + pregnancy + year/4
+    ~ log(dat.PRIMS[8,3]/base.haz), # pp 1
+    
+    # time > year + pregnancy + year/4 & 
+    # time <= year + pregnancy + year/2
+    # ~ log(dat.PRIMS[9,3]/base.haz), # pp 2
+    # 
+    # time > year + pregnancy + year/2 & 
+    # time <= year + pregnancy + (year/4) *3
+    # ~ log(dat.PRIMS[10,3]/base.haz), # pp 3
+    # 
+    # time > year + pregnancy + (year/4) *3 & 
+    # time <= duration
+    # ~ log(dat.PRIMS[11,3]/base.haz), # pp 4
+    
+    
+    T ~0
+  )
+}
+
+
+for (counter in 1:N_loops) {
+## save number of the loop
+Simulated2.ARR$Set[counter] <-  counter
+
+
+## simulate the data
+sim <- simEventData(N_IDs
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = duration
+             ,rho =  base.haz/year  #baseline hazard or event rate, scaled to DAY, ARR_roh/year
+             
+             ,z =  zFun
+             ,zCoef =  zCoefFun
+             )
+
+
+### get the ARRs
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), duration, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated2.ARR$ARR.total[counter]=  mean(tmp3$num_events)/ duration *year
+
+## get total ARR
+tmp <- sim %>% 
+  select(ID) %>% unique()
+
+tmp2 <- sim %>% 
+  filter(event == 1 &
+        X == 1) 
+
+tmp <- left_join(tmp, tmp2) %>% 
+  select(ID, event, time) %>% 
+  mutate(event= ifelse(is.na(event), 0, event),
+         time= ifelse(is.na(time), duration, time)
+         ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  mutate(num_events = ifelse(event == 0, 0, num_events))
+
+tmp3 <- tmp %>% 
+  select(ID, num_events) %>% unique()
+#save
+Simulated2.ARR$ARR.in[counter]=  mean(tmp3$num_events) / pregnancy * year
+
+}
+expected.rate = (dat.PRIMS[5,3] * 84 + dat.PRIMS[6,3] * 112 + dat.PRIMS[7,3] * 84)/280
+
+mean(Simulated2.ARR$ARR.in)
+expected.rate 
+
+
+```
+
+
+## Versuch, die PRIMS-Daten als "rho" in die Simulation ein zu bauen
+ich möchte das gerne noch mal probieren, ob das nicht doch funktioniert - das würde vieles einfacher machen ...
+
+### NUR ein Jahr, noch keine anderem Zeiträume, reiner POC
+```{r include=FALSE}
+# bazeline hazard = rhoFun test
+N_IDs = 100
+N_loops = 100
+trimester1 = 84
+trimester2= 112
+trimester3= 84
+
+pregnancy = trimester1 + trimester2 + trimester3
+
+duration = year 
+
+
+rhoFun = function(timevector, b) { 
+  timepoint <- case_when(
+    timevector <= year
+    ~ 5
+  )
+  return( b[timepoint]/year)
+  
+}
+
+test <- data.frame(sim_num = rep(NA, N_loops), ARR = rep(NA, N_loops))
+
+for (counter in 1:N_loops) {
+## simulate the data
+sim <- simEventData(N_IDs
+             ,method = "inversion"
+             ,origin= 1
+             ,endTime = year
+             ,rho = rhoFun
+             ,arguments = list(
+               rho = list(b = dat.PRIMS$ARR_simple)
+               )
+  )
+
+## get ARR in pregnancy = expected 0.5
+tmp <- sim %>%  # get all IDs
+  select(ID) %>% unique()
+
+tmp2 <- sim %>%  # get the number of events in pregnancy
+  filter(event == 1 ) %>% 
+  add_count(ID, name = "num_events") %>% 
+  dplyr::select(ID, num_events) %>% 
+  unique()
+
+tmp <- left_join(tmp, tmp2) %>% 
+
+  mutate(num_events = ifelse(is.na(num_events), 0, num_events)
+         ,ARR = (num_events  / duration) * year
+         )
+
+test$sim_num[counter] <- counter
+test$ARR[counter] <- mean(tmp$ARR)
+
+}
+
+print(mean(test$ARR))
+```
+Works! 

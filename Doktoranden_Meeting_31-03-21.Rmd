@@ -1,0 +1,391 @@
+---
+title: "Doktorandenmeeting 31.03.21"
+author: "Marianne Tokic"
+date: "3/31/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+
+library(dplyr)
+library(ggplot2)
+library(reda)
+```
+
+
+```{r}
+### Data from the original PRIMS Paper
+dat.PRIMS <- data.frame(
+  timeframe = c(             "trim1.yp" 
+                            ,"trim2.yp"   
+                            ,"trim3.yp" 
+                            ,"trim4.yp" 
+                            ,"trim1.preg" 
+                            ,"trim2.preg" 
+                            ,"trim3.preg"
+                           , "trim1.pp"   
+                           , "trim2.pp"   
+                            ,"trim3.pp"   
+                           , "trim4.pp")
+  
+  ,tf = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+  , ARR = c(
+    0.6
+    ,0.7
+    ,0.7
+    ,0.8
+    
+    ,0.5
+    ,0.6
+    ,0.2
+    
+    ,1.2
+    ,0.9
+    ,0.9
+    ,0.6
+  )
+  , lower.CI = c(
+    0.5
+    ,0.6
+    ,0.6
+    ,0.7
+    
+    ,0.4
+    ,0.5
+    ,0.2
+    
+    ,1.1
+    ,0.8
+    ,0.8
+    ,0.5
+  )
+  ,upper.CI = c(
+    0.7
+    ,0.8
+    ,0.9
+    ,0.9
+    
+    ,0.6
+    ,0.7
+    ,0.3
+    
+    ,1.4
+    ,1.0
+    ,1.0
+    ,0.7
+  )
+  ,n = rep(227, 11)
+  , dur.tf = c(rep(91.25, 4), 84, 112, 84,rep(91.25, 4) ) # add duration for each timeframe
+) %>% 
+
+## compute SD from CI, assuming normal distribution (which is NOT true)
+  mutate(SD= sqrt(n) * (upper.CI - lower.CI)/3.92)
+
+dat.PRIMS <- dat.PRIMS %>% 
+  mutate(ARR_simple= c(0.7, 0.7, 0.7, 0.7, 0.5, 0.6, 0.2, 1.2, 0.9, 0.7, 0.7))
+```
+
+
+## klassische Krankheitsaktivität bei RR-MS und Schwangerschaft: PRIMS Studie
+- 227 größtenteils untherapierte RR-MS Patienten 
+- ARR vor, in und nach der Schwangerschaft erhoben
+
+```{r}
+
+ggplot2::ggplot( data=dat.PRIMS, aes(x=tf, y=ARR)) + 
+  geom_rect( mapping=aes(xmin=4.8, xmax=7.2, ymin=0, ymax=0.75, fill= "pregnancy"), color="grey", alpha=0.5)+
+  geom_line()+
+  geom_errorbar(aes(ymin=lower.CI, ymax=upper.CI), width=.1) +
+  ggtitle("PRIMS data, 95%CI as reported")
+  
+```
+
+
+
+## Simulation von untherapierten Schwangerschaftsverläufen
+- es ist unklar wie die zeitanhängigen Effekte der Schwangerschaft und der Therapie interagieren
+- auch ist unklar welches die beste Auswertungstrategie zur Klärung dieser Frage ist
+- Simulation: reda::simEvent oder simrec
+-- simEvent hat ein Update bekommen, welches diese Funktion interresant macht
+
+## simEvent
+- simuliert wiederkehrende Ereignisse als Poisson-Prozesse
+- verschiedene Einstellmöglichkeiten
+-- frei modellierbare baseline hazard Rate
+-- frailty
+-- "Cooldown" Zeit zwischen Events (interarrival time)
+
+## Bisher umgesetzt (neu)
+- Baseline hazard (vereinfacht vor der Schwangerschaft)
+- Simulation von 10 x 100 IDs 
+
+```{r}
+####bazeline hazard = rhoFun, full time simulated
+
+## Set times
+trimester1 = 84
+trimester2= 112
+trimester3= 84
+year = 365
+quarter_year = year/4
+pregnancy = trimester1 + trimester2 + trimester3
+
+duration = year + pregnancy + year
+
+# 
+# 
+# ## Set simulation parameters
+# N_IDs = 100
+# N_loops = 10
+# 
+# ## Set functions for simulation
+# # baseline hazard
+# rhoFun = function(timevector, b) { 
+#   timepoint <- case_when( 
+#     
+#     timevector <= year 
+#     ~ 4, 
+#     
+#     timevector > year &
+#     timevector <= year + trimester1
+#     ~ 5, 
+#     
+#     timevector > year + trimester1 &
+#     timevector <= year + trimester1 + trimester2
+#     ~ 6, 
+#     
+#     timevector > year + trimester1 + trimester2 &
+#     timevector <= year + pregnancy
+#     ~ 7,
+#     
+#     timevector > year + pregnancy &
+#     timevector <= year + pregnancy + quarter_year
+#     ~ 8,
+#     
+#     timevector > year + pregnancy + quarter_year &
+#     timevector <= year + pregnancy + quarter_year + quarter_year
+#     ~ 9,
+#     
+#     timevector > year + pregnancy + quarter_year + quarter_year
+#     ~ 10,
+#   )
+#   return( b[timepoint]/year)
+#   
+# }
+# 
+# ## make dataframe to save simulated data
+# dat.sim <- data.frame(ID = NA
+#                       ,time = NA
+#                       , event = NA
+#                       , origin = NA
+#                       , X = NA
+#                       )
+# 
+# ## Simulation
+# for (counter in 1:N_loops) {
+# sim <- simEventData(N_IDs
+#              ,method = "inversion"
+#              ,origin= 1
+#              ,endTime = duration
+#              ,rho = rhoFun
+#              ,arguments = list(
+#                rho = list(b = dat.PRIMS$ARR_simple)
+#                )
+#   )
+# 
+# sim <- sim %>% 
+#   mutate(ID = ID + (counter*N_loops*N_IDs))
+# 
+# 
+# dat.sim <-  rbind(dat.sim, sim)
+# }
+# 
+# dat.sim <- dat.sim %>% # remove the NA entry
+#   filter(!is.na(ID))
+# 
+# save(dat.sim, file = "dat.sim")
+
+load("dat.sim")
+```
+
+```{r}
+## sorting events to timeframes
+
+IDs <- dat.sim %>% # get all IDs
+  select(ID) %>% unique()
+
+tmp <- dat.sim %>% # get all events
+  filter(event == 1) %>% 
+  mutate(
+    tf = case_when( # sort events into timeframes
+      
+      time <= quarter_year
+      ~ 1,
+      
+      time <= quarter_year*2 &
+      time > quarter_year
+      ~ 2,
+      
+      
+    time <= quarter_year*3 &
+    time > quarter_year*2
+      ~ 3,
+    
+    time > quarter_year*3 &
+    time <= year
+    ~ 4,
+    
+    time > year &
+    time <= year + trimester1
+    ~ 5,
+    
+    time > year + trimester1 &
+    time <= year+ trimester1 + trimester2
+    ~ 6,
+    
+    time > year + trimester1+ trimester2 &
+    time <= year + pregnancy
+    ~ 7,
+    
+    time > year + pregnancy &
+    time <= year + pregnancy + quarter_year
+    ~ 8,
+    
+    time > year + pregnancy + quarter_year &
+    time <= year + pregnancy + (2*quarter_year)
+    ~ 9,
+    
+    time > year + pregnancy +(2*quarter_year) &
+    time <= year + pregnancy + (3*quarter_year)
+    ~ 10,
+    
+    time > year + pregnancy +(3*quarter_year) &
+    time <= year + pregnancy + year
+    ~ 11,
+  )
+)
+
+num_events <- tmp %>% 
+  group_by(tf) %>% 
+  add_count(ID, name = "num_events") %>% 
+  ungroup() %>% 
+  select(ID, tf, num_events) %>% unique()
+
+dat.sim_counting <- data.frame(ID = NA
+                      ,tf = NA)
+
+
+for (counter in 1:11) {
+  
+  tmp2 <- IDs %>% 
+    mutate(
+      tf = counter
+    )
+  
+  
+ dat.sim_counting <- rbind(dat.sim_counting, tmp2) 
+}
+
+dat.sim_counting <- dat.sim_counting %>% # remove the NA entry
+  filter(!is.na(ID)) %>% 
+  arrange(ID)
+
+test <- left_join( dat.sim_counting, num_events) %>% 
+  arrange(ID) %>% 
+  mutate(num_events = ifelse(is.na(num_events), 0, num_events)) %>% 
+  mutate(ditf = case_when(
+    
+    tf == 5
+    ~ trimester1,
+    
+    tf == 6
+    ~ trimester2,
+    
+    tf == 7
+    ~ trimester3,
+    
+    T ~ quarter_year
+  ))
+```
+
+```{r}
+# get mean ARR per tf
+tmp <- test %>% 
+  mutate(ARR = 
+           ifelse(num_events > 0, num_events/ditf * year, 0)
+         ) %>% 
+  select(ID, ARR, tf)
+
+tmp2 <- tidyr::pivot_wider(tmp
+                    , id_cols = ID
+                    , names_from = tf
+                    , values_from = ARR
+                    )
+
+tmp3 <- data.frame(
+  tf = 1:11
+  ,ARR = c(
+    mean(tmp2$`1`)
+    ,mean(tmp2$`2`)
+    ,mean(tmp2$`3`)
+    ,mean(tmp2$`4`)
+    ,mean(tmp2$`5`)
+    ,mean(tmp2$`6`)
+    ,mean(tmp2$`7`)
+    ,mean(tmp2$`8`)
+    ,mean(tmp2$`9`)
+    ,mean(tmp2$`10`)
+    ,mean(tmp2$`11`)
+  )
+  , lower.CL  = c(
+    t.test(tmp2$`1`)$"conf.int"[1]
+    , t.test(tmp2$`2`)$"conf.int"[1]
+    , t.test(tmp2$`3`)$"conf.int"[1]
+    , t.test(tmp2$`4`)$"conf.int"[1]
+    , t.test(tmp2$`5`)$"conf.int"[1]
+    , t.test(tmp2$`6`)$"conf.int"[1]
+    , t.test(tmp2$`7`)$"conf.int"[1]
+    , t.test(tmp2$`8`)$"conf.int"[1]
+    , t.test(tmp2$`9`)$"conf.int"[1]
+    , t.test(tmp2$`10`)$"conf.int"[1]
+    , t.test(tmp2$`11`)$"conf.int"[1]
+  )
+  , upper.CL  = c(
+    t.test(tmp2$`1`)$"conf.int"[2]
+    , t.test(tmp2$`2`)$"conf.int"[2]
+    , t.test(tmp2$`3`)$"conf.int"[2]
+    , t.test(tmp2$`4`)$"conf.int"[2]
+    , t.test(tmp2$`5`)$"conf.int"[2]
+    , t.test(tmp2$`6`)$"conf.int"[2]
+    , t.test(tmp2$`7`)$"conf.int"[2]
+    , t.test(tmp2$`8`)$"conf.int"[2]
+    , t.test(tmp2$`9`)$"conf.int"[2]
+    , t.test(tmp2$`10`)$"conf.int"[2]
+    , t.test(tmp2$`11`)$"conf.int"[2]
+  )
+)
+
+```
+
+```{r}
+
+ggplot2::ggplot( data=tmp3, aes(x=tf, y=ARR)) + 
+  geom_rect( mapping=aes(xmin=4.8, xmax=7.2, ymin=0, ymax=0.75, fill= "pregnancy"), color="grey", alpha=0.5)+
+  geom_line(color = "blue")+
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL), width=.1, color ="blue") +
+  ggtitle("Simulated data, 95%CI for the mean")
+  
+  
+```
+
+## Interarrival time (IAT) > 30 
+- Als nächstes muss die IAT so gesetzt werden, dass mindestens 30 Tage ziwschen den Events liegen
+- simEvent nimmt als IAT Funktion frei bestimmte Funktionen
+" A function object for randomly generating (positive) interarrival time between two successive arrivals/events. The default value is "rexp" (i.e., function stats::rexp) for generating interarrival times following exponential distribution, which leads to a Poisson process. If the assumption of exponential interarrival times cannot be justified, we may consider a renewal process, (a generalization of Poisson process), in which interarrival times between events independently follows an identical distribution. A customized function can be specified in this case. It must have at least one argument named rate for the expected number of arrivals/events in unit time and returns one positive numerical value. If the function contains an argument named n, it is assumed that the function returns n interarrival times in one function call to possibly speed up the random number generation procedure. Other arguments can be specified through a named list inside arguments."
+
+## Frage:
+Wie spezifiziere ich die IAT?
+- mindestens 30 Tag
+- oberes Ende: unbekannt
+- ehrlich gesagt verstehe ich die Anleitung nicht komplett an der Stelle
